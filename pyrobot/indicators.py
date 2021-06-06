@@ -1036,6 +1036,7 @@ class Indicators():
         return signals_df
 
 
+
 # #KST Oscillator  
 # def KST(df, r1, r2, r3, r4, n1, n2, n3, n4):  
 #     M = df['Close'].diff(r1 - 1)  

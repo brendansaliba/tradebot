@@ -14,7 +14,7 @@ from pyrobot.indicators import Indicators
 
 # Grab configuration values.
 config = ConfigParser()
-config.read('configs/config.ini')
+config.read(r'E:\Projects\TradeBot\python-trading-robot\config\config.ini')
 
 CLIENT_ID = config.get('main', 'CLIENT_ID')
 REDIRECT_URI = config.get('main', 'REDIRECT_URI')
@@ -217,10 +217,10 @@ while True:
     signals = indicator_client.check_signals()
 
     # Execute Trades.
-    trading_robot.execute_signals(
-        signals=signals,
-        trades_to_execute=trades_dict
-    )
+    # trading_robot.execute_signals(
+    #     signals=signals,
+    #     trades_to_execute=trades_dict
+    # )
 
     # Grab the last bar.
     last_bar_timestamp = trading_robot.stock_frame.frame.tail(

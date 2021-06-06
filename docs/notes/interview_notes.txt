@@ -1,0 +1,34 @@
+Bar size is important
+1 min bar test
+Ticker chart
+
+This is a strategy checker
+
+Flatten is an option when trading with thinkorswim - need to implement flatten all positions.
+Trigger alerts for the "father bot"
+
+Examine how check signals works alongside orders
+
+We have to keep track of buying indicators. When trading options, we want to sell based on both
+the contract AND the contract.
+
+If you have a buy working order and you place a sell order, it will cancel the buy order.
+
+Only trade with cash accounts
+
+Cannot hold positions overnight - market hours - to combat time decay
+
+Portfolio.is_profitable("TSLA", 600)
+
+Might use add take profit for fast moving stock
+
+
+Check differences between today and now functions in datetime
+
+VWAP
+
+9sma related to the 50sma
+
+Look into streaming data from a database to a service - websockets or something like that
+
+FOCUS ON THE OPTION WHEN YOU BUY IT LMAO

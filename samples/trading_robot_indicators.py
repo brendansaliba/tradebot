@@ -9,7 +9,7 @@ from pyrobot.indicators import Indicators
 
 # Grab configuration values.
 config = ConfigParser()
-config.read('configs/config.ini')
+config.read(r'E:\Projects\TradeBot\python-trading-robot\config\config.ini')
 
 CLIENT_ID = config.get('main', 'CLIENT_ID')
 REDIRECT_URI = config.get('main', 'REDIRECT_URI')
