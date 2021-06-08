@@ -1,16 +1,13 @@
-import pprint
-import threading
-import time
-
 from datetime import datetime
 from datetime import timedelta
 
-from functions import main
-from indicators_isaac import Indicators_Isaac
+from interview_prototyping.functions import setup_func
+from interview_prototyping.indicators_isaac import Indicators_Isaac
 
 symbol = "PETS"
-trading_robot, TDSession, trading_robot_portfolio = main()
 
+# Sets up the robot class, robot's portfolio, and the TDSession object
+trading_robot, trading_robot_portfolio, TDSession = setup_func()
 
 # myoption_chart = mydb["tbl_options_charts_2021_Feb_24"]
 # cursor = myoption_chart.find({})
@@ -111,6 +108,7 @@ while True:
     indicator_client.per_of_change()
 
     # Add the 9 day simple moving average.
+
     sma_df = indicator_client.sma(period=9)
     sma_df = indicator_client.sma(period=50)
     sma_df = indicator_client.sma9_crossed_sma50()
@@ -121,10 +119,10 @@ while True:
 
     sma_df = indicator_client.abs_9_minus_50_slope()
 
-    sma_df = indicator_client.buy_condition(TDSession, symbol)
-    sma_df = indicator_client.vwap()
-    sma_df = indicator_client.max_option_chain(TDSession, symbol)
-    sma_df = indicator_client.populate_order_data(TDSession, symbol) # test
+    # sma_df = indicator_client.buy_condition(TDSession, symbol)
+    # sma_df = indicator_client.vwap()
+    # sma_df = indicator_client.max_option_chain(TDSession, symbol)
+    # sma_df = indicator_client.populate_order_data(TDSession, symbol) # test
 
     rownum=0
     print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -263,7 +261,7 @@ while True:
 
     print('file modifing')
     sma_df.to_csv(
-        r"E:\Projects\TradeBot\python-trading-robot\interview_prototyping\DataDump\analysis_" + symbol + '_' + datetime.now().strftime(
+        r"/Users/brendansaliba/Projects/Projects Data Dump/TradeBotDump/analysis_" + symbol + '_' + datetime.now().strftime(
             "%Y-%m-%d") + ".csv",
         header=True, mode='w')
 
@@ -294,18 +292,7 @@ while True:
 
     #Wait till the next bar.
     trading_robot.wait_till_next_bar(last_bar_timestamp=last_bar_timestamp)
-    #lock.release()
 
-# code start with here
-
-# class myThread(threading.Thread):
-#     def __int__(self, symbol):
-#         threading.Thread.__init__(self)
-#         self.symbol = symbol
-#
-#     def run(self):
-#         main(self.symbol)
-#
 symbol = "PETS"
 params = {
         "symbol": symbol,
@@ -349,19 +336,3 @@ for put_key, put_value in watchlist_info.get("putExpDateMap",{}).items():
 # max_volume_calls_index = max(range(len(options_list_calls)), key=lambda index: options_list_calls[index]['total_volume_calls'])
 # print(options_list_calls[max_volume_calls_index].get("symbol"))
 print(options_list_puts)
-
-
-# thread_lock = threading.Lock()
-thread =[]
-watchlist_list= [symbol]
-for row in watchlist_list:
-    print(row)
-    th = threading.Thread(target=main, args=(row,))
-    thread.append(th)
-
-for th1 in thread:
-    th1.start()
-
-
-for th2 in thread:
-    th2.join()
