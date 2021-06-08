@@ -24,7 +24,7 @@ milliseconds_since_epoch = TDUtilities().milliseconds_since_epoch
 
 class PyRobot():
 
-    def __init__(self, client_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, trading_account: str = None) -> None:
+    def __init__(self, client_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, trading_account: str = None, account_id: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
 
         Arguments:
@@ -46,6 +46,7 @@ class PyRobot():
 
         # Set the attirbutes
         self.trading_account = trading_account
+        self.account_id = account_id
         self.client_id = client_id
         self.redirect_uri = redirect_uri
         self.credentials_path = credentials_path
@@ -443,7 +444,7 @@ class PyRobot():
 
         return quotes
 
-    def grab_historical_prices(self, start: datetime, end: datetime, bar_size: int = 1,
+    def grab_historical_prices(self, TDClient: TDClient, start: datetime, end: datetime, bar_size: int = 1,
                                bar_type: str = 'minute', symbols: List[str] = None) -> List[dict]:
         """Grabs the historical prices for all the postions in a portfolio.
 
@@ -501,7 +502,7 @@ class PyRobot():
 
         for symbol in symbols:
 
-            historical_prices_response = self.session.get_price_history(
+            historical_prices_response = TDClient.get_price_history(
                 symbol=symbol,
                 period_type='day',
                 start_date=start,
@@ -829,6 +830,179 @@ class PyRobot():
 
         return order_dict
 
+    def execute_orders_2(self, TDSession, symbol, signal_list):
+        """Executes a orders from the prototype Bot.
+
+        Overview:
+        ----
+        The `execute_orders_2` method will execute orders according to signals in the 'buy_condition' column that
+        was created by the prototype bot. The 'buy_condition' column exists in the self.stock_frame dataframe.
+
+        Returns:
+        ----
+        {dict} -- An order response dicitonary.
+        """
+
+        global buy_and_sell_count
+        buy_calls_count = 0
+        buy_puts_count = 0
+        stock_data = self.stock_frame
+
+        # Buys and sells CALL options
+        if "calls_option" in stock_data.columns:
+            symbol_calls = stock_data["calls_option"][-1]  # last element in the calls_option column
+            last_ele = signal_list[-1]  # last element in the signals list from earlier
+
+            # Buy CALLS logic
+            if last_ele.startswith("Buy Calls"):
+                buy_n = int(last_ele.split()[-2])  # [Buy, Calls, 1, symbol]
+                print("Buy {} Calls.".format(buy_n))
+
+                # query portfolio for existing orders
+                filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession, symbol)
+
+                # buy condition met and no position held in ameritrade
+                if buy_n >= 2 and calls_quantity < 1:
+                    print("Buying CALL option for {} at time: ".format(symbol), datetime.now().time())
+
+                    # BUY THE CALLS
+                    # UNCOMMENT TO ACTUALY BUY
+                    # order = self.buy_stock(symbol_calls, "BUY_TO_OPEN", TDSession)
+
+                    buy_and_sell_count = 1
+                    buy_calls_count += 1
+                    print("Buy and sell count: ", buy_and_sell_count)
+
+            # Sell CALLS logic
+            elif last_ele.startswith("No action"):
+                print("Sell CALLS if we have them.")
+                no_ac_n = int(last_ele.split("No action")[1])  # Gets the 1 at the end of No Action1
+
+                # If the last element in the signal column was a no action
+                if no_ac_n == 1:  # and buy_and_sell_count == 1:
+
+                    # query portfolio for existing orders
+                    filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession,
+                                                                                                         symbol)
+
+                    # sell condition met and we have CALLS in the portfolio
+                    # abs value between 9-50 ma is decreasing
+                    if stock_data["abs_9_minus_50_slope"][-1] < stock_data["abs_9_minus_50_slope"][-2] and \
+                            calls_quantity > 1:
+                        print("Selling CALL options.")
+
+                        # Sell CALLS
+                        # UNCOMMENT TO ACTUALLY SELL
+                        # self.buy_stock(symbol_calls, "SELL_TO_CLOSE", TDSession)
+
+                        buy_and_sell_count = 0
+                    else:
+                        print("Do not own any CALLS.")
+        else:
+            print("There is no calls_option column yet.")
+            ## Add functionality to deal with lack of calls_option column
+
+        # Buys and sells PUTS options
+        if "puts_option" in stock_data.columns:
+            symbol_puts = stock_data["puts_option"][-1]
+            last_ele = signal_list[-1]
+
+            # Buy PUTS logic
+            if last_ele.startswith("Buy Puts"):
+                buy_n = int(last_ele.split()[-2])
+                print("Buy {} Puts.".format(buy_n))
+
+                # query portfolio for existing orders
+                filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession, symbol)
+
+                # buy puts condition met and no position held in TD
+                if buy_n >= 2 and puts_quantity < 1:  # and buy_and_sell_count==0:
+                    print("Buying PUT option for {} at time: ".format(symbol), datetime.now().time())
+
+                    # BUY THE PUTS
+                    # UNCOMMENT TO ACTUALY BUY
+                    # order = self.buy_stock(symbol_puts, "BUY_TO_OPEN", TDSession)
+
+                    buy_and_sell_count = 1
+                    buy_puts_count += 1
+                    print("Buy and sell count: ", buy_and_sell_count)
+
+            # Sell PUTS logic
+            elif last_ele.startswith("No action"):
+                print("Sell PUTS if we have them.")
+                no_ac_n = int(last_ele.split("No action")[1])  # Gets the 1 at the end of No Action1
+
+                # If the last element in the signal column was a no action
+                if no_ac_n == 1:  # and buy_and_sell_count==1:
+
+                    # query portfolio for existing orders
+                    filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession,
+                                                                                                         symbol)
+
+                    # sell condition met and we have positions in ameritrade
+                    # abs value between 9-50 ma is decreasing
+                    if stock_data["abs_9_minus_50_slope"][-1] < stock_data["abs_9_minus_50_slope"][-2] and \
+                            puts_quantity > 1:
+                        print("Selling PUT options.")
+
+                        # Sell PUTS
+                        # UNCOMMENT TO ACTUALLY SELL
+                        # order = self.buy_stock(symbol_puts, "SELL_TO_CLOSE", TDSession)
+
+                        stock_data["buy_count"] = -1
+                        buy_and_sell_count = 0
+                    else:
+                        print("Do not own any PUTS.")
+        else:
+            print("There is no puts_option column yet.")
+            ## Add functionality to deal with lack of calls_option column
+
+            # temp_list_for_buy_calls_count.append(0)
+            # temp_list_for_buy_puts_count.append(0)
+
+    def buy_stock(self, symbol, instruction, TDSession):
+        # Define the Order.
+
+        params = {
+            "symbol": symbol,
+            "range": "NTM",
+            # "fromDate":"2021-02-24",
+            # "toDate": "2021-02-28"
+        }
+
+        order_template = buy_limit_enter = {
+            # "orderType": "LIMIT",
+            "orderType": "MARKET",
+            "session": "NORMAL",
+            "duration": "DAY",
+            # "price": .01,
+            "orderStrategyType": "SINGLE",
+            "orderLegCollection": [
+                {
+                    "instruction": instruction,
+                    "quantity": 1,
+                    "instrument": {
+                        "symbol": symbol,
+                        # "assetType": "EQUITY"
+                        "assetType": "OPTION"
+                    }
+                }
+            ]
+        }
+
+        # Place the Order.
+        try:
+            order_response = TDSession.place_order(
+                account="71611620",
+                order=order_template
+            )
+            print("successful ", instruction, " for ", symbol)
+            return order_response
+
+        except Exception as e:
+            print("Error comes while trying ", instruction)
+            print(str(e))
+
     def save_orders(self, order_response_dict: dict) -> bool:
         """Saves the order to a JSON file for further review.
 
@@ -873,6 +1047,54 @@ class PyRobot():
             json.dump(obj=orders_list, fp=order_json, indent=4, default=default)
 
         return True
+
+    def query_orders(self, TDSession, symbol):
+        """Returns order confirmed, quantity filled, and quantity remaining"""
+
+        # Get orders (Which return list of order did in past)
+        transactions_info = TDSession.get_orders(
+            account='426805001'
+        )
+
+        # search for FILLED transactions
+        filled_orders = []
+        cumulative_calls_quantity = 0
+        cumulative_puts_quantity = 0
+        remaining_quantity = 0
+        for order in transactions_info:
+            if order['status'] == 'FILLED':
+                filled_orders.append(order)
+                order_leg = order['orderLegCollection'][0]
+                contract_symbol = order_leg['instrument']['symbol']
+                asset_type = order_leg['instrument']['assetType']
+                desc = order_leg['instrument']['description']
+
+                # check for matching symbol
+                if symbol in contract_symbol:
+
+                    # update buy
+                    if order_leg['instruction'] == 'BUY_TO_OPEN' and order_leg['positionEffect'] == 'OPENING' \
+                            and asset_type == 'OPTION':
+
+                        print("Description: %s" % desc)
+                        if 'Call' in desc:
+                            cumulative_calls_quantity += order['filledQuantity']
+                        elif 'Put' in desc:
+                            cumulative_puts_quantity += order['filledQuantity']
+                        remaining_quantity += order['remainingQuantity']
+
+                    # update sell
+                    if order_leg['instruction'] == 'SELL_TO_CLOSE' and order_leg['positionEffect'] == 'CLOSING' \
+                            and asset_type == 'OPTION':
+                        if 'Call' in desc:
+                            cumulative_calls_quantity -= order['filledQuantity']
+                        elif 'Put' in desc:
+                            cumulative_puts_quantity -= order['filledQuantity']
+                        remaining_quantity += order['remainingQuantity']
+
+                print("Order ID: %s, Instruction: %s" % (order['orderId'], order_leg['instruction']))
+                print("Calls Quantity: %d, Puts Quantity: %d" % (cumulative_calls_quantity, cumulative_puts_quantity))
+        return filled_orders, cumulative_calls_quantity, cumulative_puts_quantity, remaining_quantity
 
     def get_accounts(self, account_number: str = None, all_accounts: bool = False) -> dict:
         """Returns all the account balances for a specified account.

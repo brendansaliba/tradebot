@@ -1,11 +1,10 @@
 from configparser import ConfigParser
-from selenium import webdriver
-from robot import PyRobot
+from interview_prototyping.robot import PyRobot
 
 
 def setup_func():
     # Get credentials
-    CLIENT_ID, REDIRECT_URI, CREDENTIALS_PATH, ACCOUNT_NUMBER = import_credentials()
+    CLIENT_ID, REDIRECT_URI, CREDENTIALS_PATH, ACCOUNT_NUMBER, ACCOUNT_ID = import_credentials()
 
     # Initalize the robot with my credentials.
     trading_robot = PyRobot(
@@ -40,11 +39,12 @@ def setup_func():
 def import_credentials():
     # Grab configuration values.
     config = ConfigParser()
-    config.read(r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/config/config.ini')
+    config.read(r'E:\Projects\TradeBot\python-trading-robot\config\config.ini')
 
     CLIENT_ID = config.get('main', 'CLIENT_ID')
     REDIRECT_URI = config.get('main', 'REDIRECT_URI')
     CREDENTIALS_PATH = config.get('main', 'CREDENTIALS_PATH')
     ACCOUNT_NUMBER = config.get('main', 'ACCOUNT_NUMBER')
+    ACCOUNT_ID = config.get('main', 'ACCOUNT_ID')
 
-    return CLIENT_ID, REDIRECT_URI, CREDENTIALS_PATH, ACCOUNT_NUMBER
+    return CLIENT_ID, REDIRECT_URI, CREDENTIALS_PATH, ACCOUNT_NUMBER, ACCOUNT_ID
