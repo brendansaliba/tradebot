@@ -531,7 +531,7 @@ class PyRobot():
 
         return self.historical_prices
 
-    def get_latest_bar(self) -> List[dict]:
+    def get_latest_bar(self, TDSession, symbol) -> List[dict]:
         """Returns the latest bar for each symbol in the portfolio.
 
         Returns:
@@ -560,14 +560,16 @@ class PyRobot():
         end = str(milliseconds_since_epoch(dt_object=end_date))
 
         latest_prices = []
+        symbols = [symbol]
 
         # Loop through each symbol.
-        for symbol in self.portfolio.positions:
+        # previously looping through self.portfolio.positions
+        for symbol in symbols:
 
             try:
 
                 # Grab the request.
-                historical_prices_response = self.session.get_price_history(
+                historical_prices_response = TDSession.get_price_history(
                     symbol=symbol,
                     period_type='day',
                     start_date=start,
@@ -582,7 +584,7 @@ class PyRobot():
                 time_true.sleep(2)
 
                 # Grab the request.
-                historical_prices_response = self.session.get_price_history(
+                historical_prices_response = TDSession.get_price_history(
                     symbol=symbol,
                     period_type='day',
                     start_date=start,
@@ -888,7 +890,7 @@ class PyRobot():
                     # sell condition met and we have CALLS in the portfolio
                     # abs value between 9-50 ma is decreasing
                     if stock_data["abs_9_minus_50_slope"][-1] < stock_data["abs_9_minus_50_slope"][-2] and \
-                            calls_quantity > 1:
+                            calls_quantity >= 1:
                         print("Selling CALL options.")
 
                         # Sell CALLS
@@ -942,7 +944,7 @@ class PyRobot():
                     # sell condition met and we have positions in ameritrade
                     # abs value between 9-50 ma is decreasing
                     if stock_data["abs_9_minus_50_slope"][-1] < stock_data["abs_9_minus_50_slope"][-2] and \
-                            puts_quantity > 1:
+                            puts_quantity >= 1:
                         print("Selling PUT options.")
 
                         # Sell PUTS

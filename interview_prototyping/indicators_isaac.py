@@ -52,6 +52,9 @@ class Indicators_Isaac():
         self._current_indicators = {}
         self._indicator_signals = {}
 
+        self.stock_data = None
+        self.indicator_signal_list = []
+
         # TODO: use Alex's add_rows() function instead of updating whole dataframe
         self._frame = self._stock_frame.frame
 
@@ -919,10 +922,12 @@ class Indicators_Isaac():
                 buy_calls_count += 1
                 temp_list.append('Buy Calls ' + str(buy_calls_count) + ' ' + symbol)
 
-            # Buy PUTS condition
+            # Buy PUTS condition TODO Add 50sma below 200sma
+            # TODO Sometimes sells an option that it thinks it still has but it doesnt
             elif self._frame["sma_9_slope"][i] < 0 and \
                     self._frame["sma_volume_50_slope"][i] < 0 and \
-                    self._frame['sma9_crossed_sma50'][i] == "9maBelow50ma":
+                    self._frame['sma9_crossed_sma50'][i] == "9maBelow50ma" and \
+                    self._frame['sma_200'][i] > self._frame['sma_50'][i]:
                 no_action_puts_count = 0
                 buy_puts_count += 1
                 temp_list.append('Buy Puts ' + str(buy_puts_count) + ' ' + symbol)
@@ -939,122 +944,8 @@ class Indicators_Isaac():
         # Sets a column in the dataframe containing the buy signals
         # ['Buy Calls 1 PETS', 'Buy Puts 1 PETS', 'No action1']
         self._frame["buy_condition"] = pd.Series(temp_list).values
-
-        # MOVED ALL OF THIS SHIT TO THE ROBOT CLASS BECAUSE ITS JUST BETTER AND NOT SPAGHETTI
-        # ===================================================================================
-        # # Buys and sells CALL options
-        # if "calls_option" in self._frame.columns:
-        #     symbol_calls = self._frame["calls_option"][-1]  # last element in the calls_option column
-        #     last_ele = temp_list[-1]  # last element in the signals list from earlier
-        #
-        #     # Buy CALLS logic
-        #     if last_ele.startswith("Buy Calls"):
-        #         buy_n = int(last_ele.split()[-2])  # [Buy, Calls, 1, symbol]
-        #         print("Buy {} Calls.".format(buy_n))
-        #
-        #         # query portfolio for existing orders
-        #         filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession, symbol)
-        #
-        #         # buy condition met and no position held in ameritrade
-        #         if buy_n >= 2 and calls_quantity < 1:
-        #             print("Buying CALL option for {} at time: ".format(symbol), datetime.datetime.now().time())
-        #
-        #             # BUY THE CALLS
-        #             # UNCOMMENT TO ACTUALY BUY
-        #             #order = self.buy_stock(symbol_calls, "BUY_TO_OPEN", TDSession)
-        #
-        #             buy_and_sell_count = 1
-        #             buy_calls_count += 1
-        #             print("Buy and sell count: ", buy_and_sell_count)
-        #
-        #     # Sell CALLS logic
-        #     elif last_ele.startswith("No action"):
-        #         print("Sell CALLS if we have them.")
-        #         no_ac_n = int(last_ele.split("No action")[1])  # Gets the 1 at the end of No Action1
-        #
-        #         # If the last element in the signal column was a no action
-        #         if no_ac_n == 1:  # and buy_and_sell_count == 1:
-        #
-        #             # query portfolio for existing orders
-        #             filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession,
-        #                                                                                                  symbol)
-        #
-        #
-        #             # sell condition met and we have CALLS in the portfolio
-        #             # abs value between 9-50 ma is decreasing
-        #             if self._frame["abs_9_minus_50_slope"][-1] < self._frame["abs_9_minus_50_slope"][
-        #                 -2] and calls_quantity > 1:
-        #                 print("Selling CALL options.")
-        #
-        #                 # Sell CALLS
-        #                 #UNCOMMENT TO ACTUALLY SELL
-        #                 #self.buy_stock(symbol_calls, "SELL_TO_CLOSE", TDSession)
-        #
-        #                 buy_and_sell_count = 0
-        #             else:
-        #                 print("Do not own any CALLS.")
-        # else:
-        #     print("There is no calls_option column yet.")
-        #     ## Add functionality to deal with lack of calls_option column
-        #
-        # # Buys and sells PUTS options
-        # if "puts_option" in self._frame.columns:
-        #     symbol_puts = self._frame["puts_option"][-1]
-        #     last_ele = temp_list[-1]
-        #
-        #     # Buy PUTS logic
-        #     if last_ele.startswith("Buy Puts"):
-        #         buy_n = int(last_ele.split()[-2])
-        #         print("Buy {} Puts.".format(buy_n))
-        #
-        #         # query portfolio for existing orders
-        #         filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession, symbol)
-        #
-        #         # buy puts condition met and no position held in TD
-        #         if buy_n >= 2 and puts_quantity < 1:  # and buy_and_sell_count==0:
-        #             print("Buying PUT option for {} at time: ".format(symbol), datetime.datetime.now().time())
-        #
-        #             # BUY THE PUTS
-        #             # UNCOMMENT TO ACTUALY BUY
-        #             #order = self.buy_stock(symbol_puts, "BUY_TO_OPEN", TDSession)
-        #
-        #             buy_and_sell_count = 1
-        #             buy_puts_count += 1
-        #             print("Buy and sell count: ", buy_and_sell_count)
-        #
-        #     # Sell PUTS logic
-        #     elif last_ele.startswith("No action"):
-        #         print("Sell PUTS if we have them.")
-        #         no_ac_n = int(last_ele.split("No action")[1])  # Gets the 1 at the end of No Action1
-        #
-        #         # If the last element in the signal column was a no action
-        #         if no_ac_n == 1:  # and buy_and_sell_count==1:
-        #
-        #             # query portfolio for existing orders
-        #             filled_orders, calls_quantity, puts_quantity, remaining_quantity = self.query_orders(TDSession,
-        #                                                                                                  symbol)
-        #
-        #             # sell condition met and we have positions in ameritrade
-        #             # abs value between 9-50 ma is decreasing
-        #             if self._frame["abs_9_minus_50_slope"][-1] < self._frame["abs_9_minus_50_slope"][
-        #                 -2] and puts_quantity > 1:
-        #                 print("Selling PUT options.")
-        #
-        #                 # Sell PUTS
-        #                 # UNCOMMENT TO ACTUALLY SELL
-        #                 #order = self.buy_stock(symbol_puts, "SELL_TO_CLOSE", TDSession)
-        #
-        #                 self._frame["buy_count"] = -1
-        #                 buy_and_sell_count = 0
-        #             else:
-        #                 print("Do not own any PUTS.")
-        # else:
-        #     print("There is no puts_option column yet.")
-        #     ## Add functionality to deal with lack of calls_option column
-        #
-        #     # temp_list_for_buy_calls_count.append(0)
-        #     # temp_list_for_buy_puts_count.append(0)
-        # ===================================================================================
+        self.stock_data = self._frame
+        self.indicator_signal_list = temp_list
 
         return self._frame, temp_list
 

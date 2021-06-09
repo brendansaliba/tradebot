@@ -12,7 +12,7 @@ def setup_func():
         redirect_uri=REDIRECT_URI,
         credentials_path=CREDENTIALS_PATH,
         trading_account=ACCOUNT_NUMBER,
-        paper_trading=True
+        # paper_trading=True
     )
     print("Bot created.")
 

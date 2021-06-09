@@ -4,14 +4,14 @@ from datetime import timedelta
 from interview_prototyping.functions import setup_func
 from interview_prototyping.indicators_isaac import Indicators_Isaac
 
-symbol = "TSLA"
+symbol = "WEN"
 
 # Sets up the robot class, robot's portfolio, and the TDSession object
 trading_robot, _, TDSession = setup_func()
 
 # Grab the historical prices for the symbol we're trading.
-start_date = datetime.today()
-end_date = start_date - timedelta(minutes=2)  # previously seconds=5 ???
+end_date = datetime.today()
+start_date = end_date - timedelta(minutes=2)  # previously seconds=5 ???
 
 historical_prices = trading_robot.grab_historical_prices(
     TDClient=TDSession,
@@ -46,6 +46,8 @@ indicator_client.sma_volume(period=9)
 indicator_client.sma_volume(period=50)
 indicator_client.sma_volume(period=200)
 indicator_client.abs_9_minus_50_slope()
+indicator_client.max_option_chain(TDSession, symbol)
+indicator_client.buy_condition(TDSession, symbol)
 
 # Define refresh time so we know when to refresh the TDClient
 refresh_time = datetime.now() + timedelta(minutes=21)
@@ -58,15 +60,17 @@ while True:
         refresh_time = datetime.now() + timedelta(minutes=21)
 
     # Trade Now
-    indicator_client.max_option_chain(TDSession, symbol)
-    sma_df, signal_list = indicator_client.buy_condition(TDSession, symbol)
+    # sma_df, signal_list = indicator_client.buy_condition(TDSession, symbol)
     # sma_df = indicator_client.populate_order_data(TDSession, symbol) # test
 
-    print(sma_df.tail())
+    stock_df = indicator_client.stock_data
+    signal_list = indicator_client.indicator_signal_list
+
+    print(stock_df.tail())
 
     # Set the StockFrame in the trading robot to the one that is spit out from the indicator client because shitty
     # spaghetti code
-    trading_robot.stock_frame = sma_df
+    trading_robot.stock_frame = stock_df
     trading_robot.execute_orders_2(TDSession=TDSession, symbol=symbol, signal_list=signal_list)
 
     # rownum = 0
@@ -83,10 +87,14 @@ while True:
     # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
     # Grab the latest bar.
-    latest_bars = trading_robot.get_latest_bar()
+    latest_bars = trading_robot.get_latest_bar(TDSession=TDSession, symbol=symbol)
 
     # Add to the Stock Frame.
     stock_frame.add_rows(data=latest_bars)
+
+    # Update the stock frame in the robot and indicator client again
+    trading_robot.stock_frame = stock_frame.frame
+    indicator_client.stock_data = stock_frame.frame
 
     # Refresh the Indicators.
     indicator_client.refresh()

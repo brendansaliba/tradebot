@@ -32,3 +32,11 @@ VWAP
 Look into streaming data from a database to a service - websockets or something like that
 
 FOCUS ON THE OPTION WHEN YOU BUY IT LMAO
+
+Write to excel file
+
+Sort positions by strike and purchase time, then we can sell the right positions
+
+Multiple stock positions
+
+Ticker chart rather than 1min
