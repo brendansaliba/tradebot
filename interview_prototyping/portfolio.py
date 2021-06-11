@@ -21,6 +21,8 @@ class Portfolio():
         """
 
         self.positions = {}
+        self.filled_orders = {}
+        self.pending_orders = {}
         self.positions_count = 0
 
         self.profit_loss = 0.00
@@ -162,6 +164,37 @@ class Portfolio():
 
         return self.positions[symbol]
 
+    def add_filled_order(self, symbol, order_response) -> dict:
+        order_id = order_response['orderId']
+
+        if order_response['status'] == "FILLED":
+            if symbol in self.filled_orders:
+                self.filled_orders[symbol][order_id] = order_response
+
+            else:
+                self.filled_orders[symbol] = {order_id: order_response}
+        else:
+            print('Order {} is not yet filled. Adding to pending orders...'.format(order_id))
+            self.add_pending_order(symbol, order_response)
+            return self.filled_orders
+
+        print('Filled order {} added.'.format(order_id))
+
+        return self.filled_orders
+
+    def add_pending_order(self, symbol, order_response) -> dict:
+        order_id = order_response['orderId']
+
+        if symbol in self.filled_orders:
+            self.filled_orders[symbol][order_id] = order_response
+
+        else:
+            self.filled_orders[symbol] = {order_id: order_response}
+
+        print('Pending order {} added.'.format(order_id))
+
+        return self.pending_orders
+
     def remove_position(self, symbol: str) -> Tuple[bool, str]:
         """Deletes a single position from the portfolio.
 
@@ -196,9 +229,9 @@ class Portfolio():
 
         if symbol in self.positions:
             del self.positions[symbol]
-            return (True, "{symbol} was successfully removed.".format(symbol=symbol))
+            return True, "{symbol} was successfully removed.".format(symbol=symbol)
         else:
-            return (False, "{symbol} did not exist in the porfolio.".format(symbol=symbol))
+            return False, "{symbol} did not exist in the porfolio.".format(symbol=symbol)
 
     def total_allocation(self) -> dict:
         """Returns a summary of the portfolio by asset allocation."""
@@ -466,9 +499,9 @@ class Portfolio():
         else:
             raise KeyError("The Symbol you tried to request does not exist.")
 
-        if (purchase_price <= current_price):
+        if purchase_price <= current_price:
             return True
-        elif (purchase_price > current_price):
+        elif purchase_price > current_price:
             return False
 
     def projected_market_value(self, current_prices: dict) -> dict:

@@ -1,6 +1,7 @@
 import pprint
 import operator
 import pandas as pd
+import pickle
 
 from datetime import datetime
 from datetime import timedelta
@@ -14,28 +15,20 @@ from pyrobot.indicators import Indicators
 symbol = "TSLA"
 
 # Sets up the robot class, robot's portfolio, and the TDSession object
-trading_robot, _, TDSession = setup_func()
-
-# Grab the historical prices for the symbol we're trading.
-start_date = datetime.today()
-end_date = start_date - timedelta(minutes=2)  # previously seconds=5 ???
-
-# print(start_date, ' ', end_date)
+# trading_robot, _, TDSession = setup_func()
 #
-# historical_prices = trading_robot.grab_historical_prices(
-#     TDClient=TDSession,
-#     start=end_date,
-#     end=start_date,
-#     bar_size=1,
-#     bar_type='minute',
-#     symbols=[symbol]
-# )
+# accounts = TDSession.get_accounts()
 #
-# print(historical_prices)
+# account_id = trading_robot.account_id
+#
+# transactions_info = TDSession.get_orders(account_id)
+#
+# print(accounts[0]['securitiesAccount']['type'], accounts[0]['securitiesAccount']['accountId'])
+# print(accounts[1]['securitiesAccount']['type'], accounts[1]['securitiesAccount']['accountId'])
 
-data = TDSession.get_accounts()
-accountId = data[0]['securitiesAccount']['accountId']
-print(accountId)
+# print(trading_robot.portfolio.positions)
 
+testdict = {}
 
-print(type(str(datetime.now())))
+testdict[symbol] = {}
+print(testdict)

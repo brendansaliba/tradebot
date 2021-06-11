@@ -4,14 +4,14 @@ from datetime import timedelta
 from interview_prototyping.functions import setup_func
 from interview_prototyping.indicators_isaac import Indicators_Isaac
 
-symbol = "WEN"
+symbol = "TSLA"
 
 # Sets up the robot class, robot's portfolio, and the TDSession object
 trading_robot, _, TDSession = setup_func()
 
 # Grab the historical prices for the symbol we're trading.
 end_date = datetime.today()
-start_date = end_date - timedelta(minutes=2)  # previously seconds=5 ???
+start_date = end_date - timedelta(minutes=200)  # previously seconds=5 ???
 
 historical_prices = trading_robot.grab_historical_prices(
     TDClient=TDSession,
@@ -36,7 +36,7 @@ trading_robot.portfolio.historical_prices = historical_prices
 # Create an indicator Object.
 indicator_client = Indicators_Isaac(price_data_frame=stock_frame)
 
-# Indicators
+# Add required indicators
 indicator_client.per_of_change()
 indicator_client.sma(period=9)
 indicator_client.sma(period=50)
@@ -49,7 +49,7 @@ indicator_client.abs_9_minus_50_slope()
 indicator_client.max_option_chain(TDSession, symbol)
 indicator_client.buy_condition(TDSession, symbol)
 
-# Define refresh time so we know when to refresh the TDClient
+# Define initial refresh time so we know when to refresh the TDClient
 refresh_time = datetime.now() + timedelta(minutes=21)
 
 while True:
@@ -68,23 +68,14 @@ while True:
 
     print(stock_df.tail())
 
-    # Set the StockFrame in the trading robot to the one that is spit out from the indicator client because shitty
-    # spaghetti code
+    # TODO Send signals and list of options to the bot object
+
+    # Set the StockFrame in the robot to the one from the indicator client because shitty spaghetti code
     trading_robot.stock_frame = stock_df
-    trading_robot.execute_orders_2(TDSession=TDSession, symbol=symbol, signal_list=signal_list)
+    order, order_response = trading_robot.execute_orders_2(TDSession=TDSession, symbol=symbol, signal_list=signal_list)
 
-    # rownum = 0
-    # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-
-    # for jk in sma_df:print(jk)
-    # for row in sma_df['open']:
-    #     # print(row)
-    #     if rownum == len(sma_df['open']):print(sma_df['buy_condition'][rownum],sma_df['new york time'][rownum])
-    #     if rownum == len(sma_df['open'])-1: print(sma_df['buy_condition'][rownum], sma_df['new york time'][rownum])
-    #     if rownum == len(sma_df['open'])-2: print(sma_df['buy_condition'][rownum], sma_df['new york time'][rownum])
-    #     if rownum == len(sma_df['open'])-3: print(sma_df['buy_condition'][rownum], sma_df['new york time'][rownum])
-    #     rownum += 1
-    # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    # Add the order to the portfolio object within the bot
+    trading_robot.portfolio.add_filled_order(symbol=symbol, order_response=order_response)
 
     # Grab the latest bar.
     latest_bars = trading_robot.get_latest_bar(TDSession=TDSession, symbol=symbol)

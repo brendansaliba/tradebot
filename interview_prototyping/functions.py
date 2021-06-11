@@ -12,6 +12,7 @@ def setup_func():
         redirect_uri=REDIRECT_URI,
         credentials_path=CREDENTIALS_PATH,
         trading_account=ACCOUNT_NUMBER,
+        account_id=ACCOUNT_ID
         # paper_trading=True
     )
     print("Bot created.")
@@ -39,7 +40,7 @@ def setup_func():
 def import_credentials():
     # Grab configuration values.
     config = ConfigParser()
-    config.read(r'E:\Projects\TradeBot\python-trading-robot\config\config.ini')
+    config.read(r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/config/config.ini')
 
     CLIENT_ID = config.get('main', 'CLIENT_ID')
     REDIRECT_URI = config.get('main', 'REDIRECT_URI')

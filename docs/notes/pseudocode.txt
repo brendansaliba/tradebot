@@ -1,0 +1,8 @@
+Trading bot pseudocode: one symbol trading
+------------------------------------------
+
+Setup bot class with TDSession
+Grab initial historical data between now and 200 periods ago (minute data)
+Convert historical data into a StockFrame
+
+

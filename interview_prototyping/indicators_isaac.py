@@ -332,12 +332,10 @@ class Indicators_Isaac():
             if math.isnan(val_9) or math.isnan(val_50):
                 temp_sma_9_minus_50.append(0)
             else:
-                temp_sma_9_minus_50.append(round(abs(val_9 - val_50) * 0.0174533 * 1000, 4))
+                temp_sma_9_minus_50.append(round(abs(val_9 - val_50) * 0.0174533 * 1000, 4)) # do these dudes know basic math what
 
         self._frame[column_name] = pd.Series(temp_sma_9_minus_50).values
-        # print(row[column_name])
 
-        # print(self._frame)
         return self._frame
 
     def sma(self, period: int, column_name: str = 'sma') -> pd.DataFrame:
@@ -584,9 +582,9 @@ class Indicators_Isaac():
     def reformat_symbol(self, symbol):
         """Returns the contract identifier from the symbol"""
         symbol_new_format_list = symbol.split('_')
-        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + symbol_new_format_list[
-                                                                                                   1][0:2] + \
-                            symbol_new_format_list[1][2:4] + symbol_new_format_list[1][6:]
+        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + \
+                            symbol_new_format_list[1][0:2] + symbol_new_format_list[1][2:4] + \
+                            symbol_new_format_list[1][6:]
         return symbol_new_format
 
     def max_option_chain(self, TDSession, symbol):
@@ -844,12 +842,12 @@ class Indicators_Isaac():
         )
         return order['status']
 
-    def query_orders(self, TDSession, symbol):
+    def query_orders(self, TDSession, symbol, account_id):
         """Returns order confirmed, quantity filled, and quantity remaining"""
 
         # Get orders (Which return list of order did in past)
         transactions_info = TDSession.get_orders(
-            account='426805001'
+            account=account_id
         )
 
         # search for FILLED transactions
