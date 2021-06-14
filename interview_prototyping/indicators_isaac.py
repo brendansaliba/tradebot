@@ -588,6 +588,27 @@ class Indicators_Isaac():
         return symbol_new_format
 
     def max_option_chain(self, TDSession, symbol):
+        """Returns near the money (NTM) options on the call and put side that are highest volume.
+
+          Arguments:
+          ----
+
+          Returns:
+          ----
+
+          Usage:
+          ----
+              >>> historical_prices_df = trading_robot.grab_historical_prices(
+                  start=start_date,
+                  end=end_date,
+                  bar_size=1,
+                  bar_type='minute'
+              )
+              >>> price_data_frame = pd.DataFrame(data=historical_prices)
+              >>> indicator_client = Indicators(price_data_frame=price_data_frame)
+              >>> indicator_client.sma(period=100)
+          """
+
         locals_data = locals()
         del locals_data['self']
 
@@ -595,27 +616,19 @@ class Indicators_Isaac():
         self._current_indicators['calls_option']['args'] = locals_data
         self._current_indicators['calls_option']['func'] = self.max_option_chain
 
-        # rint(self.price_data_frame)
-        # loop_count = int(len(self._frame) / 2) - 1
-
-        # self._frame['calls_option'] = ((self._frame["low"] + self._frame["close"] + self._frame["high"]) / 3) * \
-        #                                      self._frame["volume"]
-
         params = {
             "symbol": symbol,
-            "range": "NTM",
-            # "fromDate":"2021-02-24",
-            # "toDate": "2021-02-28"
+            "range": "NTM"
         }
-        watchlist_info = TDSession.get_options_chain(option_chain=params)
-        # print(watchlist_info)
 
-        # -------------------------------------------- calls
+        watchlist_info = TDSession.get_options_chain(option_chain=params)
 
         options_list_calls = []
         options_list_calls_total_volume = []
+        temp_symbol_list = []
 
         # Level One - Option. .WMT210312C131 to convert it WMT_031221C131
+        # Loop through the watchlist_info (which is actually the options chain information) and create a temp dictionary
         for call_key, call_value in watchlist_info.get("callExpDateMap", {}).items():
             for candle_key, candle_value in watchlist_info.get("callExpDateMap", {}).get(call_key).items():
                 temp_d = {
@@ -625,39 +638,31 @@ class Indicators_Isaac():
                         "totalVolume"),
                     "percent_change":
                         watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
-                            "percentChange"),
+                            "percentChange")
                 }
                 options_list_calls.append(temp_d)
 
+        # Get the calls with max volume
         max_volume_calls_index = max(range(len(options_list_calls)),
                                      key=lambda index: options_list_calls[index]['total_volume'])
-        # print(max_volume_calls_index)
-        # max_volume_calls_index = options_list_calls.index(max_volume_calls)
-        # print(options_list_calls[max_volume_calls_index].get("symbol"))
 
+        # Reformat the options
         symbol_new_format = options_list_calls[max_volume_calls_index].get("symbol")
         symbol_new_format_list = symbol_new_format.split('_')
-        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + symbol_new_format_list[
-                                                                                                   1][0:2] + \
-                            symbol_new_format_list[1][2:4] + symbol_new_format_list[1][6:]
-        # symbol_new_format = self.reformat_symbol(symbol_new_format)
+        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + \
+                            symbol_new_format_list[1][0:2] + symbol_new_format_list[1][2:4] + \
+                            symbol_new_format_list[1][6:]
 
-        temp_symbol_list = []
         for i in range(len(self._frame)):
             temp_symbol_list.append(options_list_calls[max_volume_calls_index].get("symbol"))
-
-        # pd.Series(temp_list).values
         self._frame['calls_option'] = pd.Series(temp_symbol_list).values
 
         temp_symbol_list = []
         for i in range(len(self._frame)):
             temp_symbol_list.append(symbol_new_format)
-
-        # pd.Series(temp_list).values
         self._frame['calls_option_format'] = pd.Series(temp_symbol_list).values
 
         temp_symbol_list = []
-        #print(options_list_calls)
         for i in range(len(self._frame)):
             temp_symbol_list.append(options_list_calls[max_volume_calls_index].get("percent_change"))
         self._frame['percent_change_calls'] = pd.Series(temp_symbol_list).values
@@ -685,29 +690,22 @@ class Indicators_Isaac():
                 options_list_puts_total_volume.append(
                     watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get("totalVolume"))
 
-        # max_volume_calls = max(options_list_calls, key=lambda x:x["total_valumn"])
-
         max_volume_puts_index = max(range(len(options_list_puts)),
                                     key=lambda index: options_list_puts[index]['total_volume'])
         symbol_new_format = options_list_puts[max_volume_puts_index].get("symbol")
         symbol_new_format_list = symbol_new_format.split('_')
-        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + symbol_new_format_list[
-                                                                                                   1][0:2] + \
-                            symbol_new_format_list[1][2:4] + symbol_new_format_list[1][6:]
-        # symbol_new_format = self.reformat_symbol(symbol_new_format)
+        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + \
+                            symbol_new_format_list[1][0:2] + symbol_new_format_list[1][2:4] + \
+                            symbol_new_format_list[1][6:]
 
         temp_symbol_list = []
         for i in range(len(self._frame)):
             temp_symbol_list.append(options_list_puts[max_volume_puts_index].get("symbol"))
-
-        # pd.Series(temp_list).values
         self._frame['puts_option'] = pd.Series(temp_symbol_list).values
 
         temp_symbol_list = []
         for i in range(len(self._frame)):
             temp_symbol_list.append(symbol_new_format)
-
-        # pd.Series(temp_list).values
         self._frame['puts_option_format'] = pd.Series(temp_symbol_list).values
 
         temp_symbol_list = []
@@ -726,9 +724,8 @@ class Indicators_Isaac():
         """Populates order data columns in dataframe"""
 
         # Get orders (Which return list of order did in past)
-        transactions_info = TDSession.get_orders(
-            account='71611620',
-        )
+        # TODO Make account number dynamic
+        transactions_info = TDSession.get_orders(account='71611620')
 
         for order in transactions_info:
             print(order)
@@ -772,6 +769,56 @@ class Indicators_Isaac():
                 df_temp = df_temp.set_index(keys=['symbol', 'datetime'])
                 self._frame = pd.concat([self._frame, df_temp])
                 self._frame.sort_index(inplace=True)
+        return self._frame
+
+    def populate_order_data_2(self, order):
+        """Populates order data columns in dataframe"""
+
+        # Get orders (Which return list of order did in past)
+        # TODO Make account number dynamic
+
+        ''' ORDER TEMPLATE FILLED
+            {
+                'orderType': 'MARKET',
+                'session': 'NORMAL',
+                'duration': 'DAY',
+                'orderStrategyType': 'SINGLE',
+                'orderLegCollection': [{
+                    'instruction': 'BUY_TO_OPEN',
+                    'quantity': 1,
+                    'instrument': {
+                        'symbol': 'NIO_061121C45',
+                        'assetType': 'OPTION'
+                    }
+                }]
+            }
+        '''
+
+        order_type = order['orderType']
+        session = order['']
+        duration = order['']
+        instruction = order['orderLegCollection'][0]['instruction']
+        quantity = order['orderLegCollection'][0]['quantity']
+        symbol = order['orderLegCollection'][0]['instrument']['symbol']
+        asset_type = order['orderLegCollection'][0]['instrument']['assetType']
+
+        if 'order_type' not in self._frame:
+            self._frame['order_type'] = ''
+        if 'instruction' not in self._frame:
+            self._frame['instruction'] = ''
+        if 'quantity' not in self._frame:
+            self._frame['quantity'] = ''
+        if 'symbol' not in self._frame:
+            self._frame['symbol'] = ''
+        if 'asset_type' not in self._frame:
+            self._frame['asset_type'] = ''
+
+        self._frame.iloc[-1, self._frame.columns.get_loc('order_type')] = order_type
+        self._frame.iloc[-1, self._frame.columns.get_loc('instruction')] = instruction
+        self._frame.iloc[-1, self._frame.columns.get_loc('quantity')] = quantity
+        self._frame.iloc[-1, self._frame.columns.get_loc('symbol')] = symbol
+        self._frame.iloc[-1, self._frame.columns.get_loc('asset_type')] = asset_type
+
         return self._frame
 
     def buy_stock(self, symbol, instruction, TDSession):

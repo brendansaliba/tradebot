@@ -164,37 +164,6 @@ class Portfolio():
 
         return self.positions[symbol]
 
-    def add_filled_order(self, symbol, order_response) -> dict:
-        order_id = order_response['orderId']
-
-        if order_response['status'] == "FILLED":
-            if symbol in self.filled_orders:
-                self.filled_orders[symbol][order_id] = order_response
-
-            else:
-                self.filled_orders[symbol] = {order_id: order_response}
-        else:
-            print('Order {} is not yet filled. Adding to pending orders...'.format(order_id))
-            self.add_pending_order(symbol, order_response)
-            return self.filled_orders
-
-        print('Filled order {} added.'.format(order_id))
-
-        return self.filled_orders
-
-    def add_pending_order(self, symbol, order_response) -> dict:
-        order_id = order_response['orderId']
-
-        if symbol in self.filled_orders:
-            self.filled_orders[symbol][order_id] = order_response
-
-        else:
-            self.filled_orders[symbol] = {order_id: order_response}
-
-        print('Pending order {} added.'.format(order_id))
-
-        return self.pending_orders
-
     def remove_position(self, symbol: str) -> Tuple[bool, str]:
         """Deletes a single position from the portfolio.
 

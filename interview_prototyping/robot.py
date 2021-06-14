@@ -24,7 +24,7 @@ milliseconds_since_epoch = TDUtilities().milliseconds_since_epoch
 
 class PyRobot():
 
-    def __init__(self, client_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, trading_account: str = None, account_id: str = None) -> None:
+    def __init__(self, client_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, json_path: str = None, trading_account: str = None, account_id: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
 
         Arguments:
@@ -50,8 +50,11 @@ class PyRobot():
         self.client_id = client_id
         self.redirect_uri = redirect_uri
         self.credentials_path = credentials_path
+        self.json_path = json_path
         self.session: TDClient = self._create_session()
         self.trades = {}
+        self.jank_portfolio = {}
+        self.old_responses = []
         self.historical_prices = {}
         self.stock_frame: StockFrame = None
         self.paper_trading = paper_trading
@@ -834,7 +837,7 @@ class PyRobot():
 
         return order_dict
 
-    def execute_orders_2(self, TDSession, symbol, signal_list) -> dict:
+    def execute_orders_2(self, TDSession, symbol, signal_list, trading_options: bool = True):
         """Executes a orders from the prototype Bot.
 
         Overview:
@@ -873,7 +876,7 @@ class PyRobot():
 
                     # BUY THE CALLS
                     # UNCOMMENT TO ACTUALY BUY
-                    # order, order_response = self.buy_stock(symbol_calls, "BUY_TO_OPEN", TDSession)
+                    # order, order_response = self.buy_stock(symbol, symbol_calls, "BUY_TO_OPEN", TDSession)
 
                     buy_and_sell_count = 1
                     buy_calls_count += 1
@@ -895,7 +898,7 @@ class PyRobot():
 
                         # Sell CALLS
                         # UNCOMMENT TO ACTUALLY SELL
-                        # order, order_response = self.buy_stock(symbol_calls, "SELL_TO_CLOSE", TDSession)
+                        # order, order_response = self.sell_stock(symbol, symbol_calls, "SELL_TO_CLOSE", TDSession)
 
                         buy_and_sell_count = 0
                     else:
@@ -919,8 +922,8 @@ class PyRobot():
                     print("Buying PUT option for {} at time: ".format(symbol), datetime.now().time())
 
                     # BUY THE PUTS
-                    # UNCOMMENT TO ACTUALY BUY
-                    # order, order_response = self.buy_stock(symbol_puts, "BUY_TO_OPEN", TDSession)
+                    # UNCOMMENT TO ACTUALLY BUY
+                    # order, order_response = self.buy_stock(symbol, symbol_puts, "BUY_TO_OPEN", TDSession)
 
                     buy_and_sell_count = 1
                     buy_puts_count += 1
@@ -942,7 +945,7 @@ class PyRobot():
 
                         # Sell PUTS
                         # UNCOMMENT TO ACTUALLY SELL
-                        # order, order_response = self.buy_stock(symbol_puts, "SELL_TO_CLOSE", TDSession)
+                        # order, order_response = self.sell_stock(symbol, symbol_puts, "SELL_TO_CLOSE", TDSession)
 
                         stock_data["buy_count"] = -1
                         buy_and_sell_count = 0
@@ -957,16 +960,9 @@ class PyRobot():
 
         return order, order_response
 
-    def buy_stock(self, symbol, instruction, TDSession):
+    def buy_stock(self, symbol, option_symbol, instruction, TDSession):
         # Define the Order.
-
-        params = {
-            "symbol": symbol,
-            "range": "NTM",
-            # "fromDate":"2021-02-24",
-            # "toDate": "2021-02-28"
-        }
-
+        order_response = {}
         order_template = {
             "orderType": "MARKET",  # "LIMIT"
             "session": "NORMAL",
@@ -978,7 +974,7 @@ class PyRobot():
                     "instruction": instruction,  # "BUY_TO_OPEN", "SELL_TO_CLOSE"
                     "quantity": 1,  # number of instruments
                     "instrument": {
-                        "symbol": symbol,
+                        "symbol": option_symbol,
                         "assetType": "OPTION"  # "EQUITY"
                     }
                 }
@@ -992,12 +988,81 @@ class PyRobot():
                 order=order_template
             )
             print(instruction, " order placed for ", symbol)
+
+            # Add the response and symbol to the thingies
+            response_dict = {'option_symbol': option_symbol, 'order_response': order_response}
+            self.old_responses.append(order_response)
+
+            if symbol not in self.jank_portfolio:
+                self.jank_portfolio[symbol] = [response_dict]
+            else:
+                self.jank_portfolio[symbol].append(response_dict)
+
             return order_template, order_response
 
         except Exception as e:
             print("Error trying to place ", instruction, " for ", symbol)
             print(str(e))
             return order_template, order_response
+
+    def sell_stock(self, symbol, option_symbol, instruction: str, TDSession: TDClient, trading_options: bool):
+        # Go away warnings
+        order_response = {}
+
+        # Loop through the positions we own for a stock symbol
+        for index, position in enumerate(self.jank_portfolio[symbol]):
+            # Get the order of the symbol
+            option_symbol = position['order_response']['request_body']['orderLegCollection'][0]['instrument']['symbol']
+
+            # Define the Order.
+            new_order_response = {}
+            order_template = {
+                "orderType": "MARKET",  # "LIMIT"
+                "session": "NORMAL",
+                "duration": "DAY",
+                # "price": .01, # add for limit order
+                "orderStrategyType": "SINGLE",
+                "orderLegCollection": [
+                    {
+                        "instruction": instruction,  # "BUY_TO_OPEN", "SELL_TO_CLOSE"
+                        "quantity": 1,  # number of instruments
+                        "instrument": {
+                            "symbol": option_symbol,
+                            "assetType": "OPTION"  # "EQUITY"
+                        }
+                    }
+                ]
+            }
+
+            # Place the Order.
+            try:
+                order_response = TDSession.place_order(
+                    account=self.account_id,
+                    order=order_template
+                )
+                print(instruction, " order placed for ", symbol)
+
+                # Remove the response from the portfolio and add to the outdated one
+                self.jank_portfolio[symbol].remove(index)
+                self.old_responses.append(new_order_response)
+
+                return order_template, order_response
+
+            except Exception as e:
+                    print("Error trying to place ", instruction, " for ", symbol)
+                    print(str(e))
+                    return order_template, order_response
+
+    def currentPositions(self, TDSession):
+        accounts_info = TDSession.get_accounts(account='all', fields=['orders', 'positions'])
+
+        all_symbols = []
+        for account in accounts_info:
+            if account['securitiesAccount']['accountId'] == self.account_id:
+                for sym in account['securitiesAccount']['positions']:
+                    all_symbols.append(sym['instrument']['symbol'])
+
+        return all_symbols
 
     def save_orders(self, order_response_dict: dict) -> bool:
         """Saves the order to a JSON file for further review.
