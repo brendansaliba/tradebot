@@ -36,3 +36,5 @@ print(now)
 filename = "{}_run_{}".format(symbol, now)
 
 print(filename)
+
+print(platform.system())

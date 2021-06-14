@@ -793,14 +793,22 @@ class Indicators_Isaac():
                 }]
             }
         '''
-
-        order_type = order['orderType']
-        session = order['']
-        duration = order['']
-        instruction = order['orderLegCollection'][0]['instruction']
-        quantity = order['orderLegCollection'][0]['quantity']
-        symbol = order['orderLegCollection'][0]['instrument']['symbol']
-        asset_type = order['orderLegCollection'][0]['instrument']['assetType']
+        if order:
+            order_type = order['orderType']
+            session = order['']
+            duration = order['']
+            instruction = order['orderLegCollection'][0]['instruction']
+            quantity = order['orderLegCollection'][0]['quantity']
+            symbol = order['orderLegCollection'][0]['instrument']['symbol']
+            asset_type = order['orderLegCollection'][0]['instrument']['assetType']
+        else:
+            order_type = ''
+            session = ''
+            duration = ''
+            instruction = ''
+            quantity = ''
+            symbol = ''
+            asset_type = ''
 
         if 'order_type' not in self._frame:
             self._frame['order_type'] = ''
@@ -808,15 +816,15 @@ class Indicators_Isaac():
             self._frame['instruction'] = ''
         if 'quantity' not in self._frame:
             self._frame['quantity'] = ''
-        if 'symbol' not in self._frame:
-            self._frame['symbol'] = ''
+        if 'option_symbol' not in self._frame:
+            self._frame['option_symbol'] = ''
         if 'asset_type' not in self._frame:
             self._frame['asset_type'] = ''
 
         self._frame.iloc[-1, self._frame.columns.get_loc('order_type')] = order_type
         self._frame.iloc[-1, self._frame.columns.get_loc('instruction')] = instruction
         self._frame.iloc[-1, self._frame.columns.get_loc('quantity')] = quantity
-        self._frame.iloc[-1, self._frame.columns.get_loc('symbol')] = symbol
+        self._frame.iloc[-1, self._frame.columns.get_loc('option_symbol')] = symbol
         self._frame.iloc[-1, self._frame.columns.get_loc('asset_type')] = asset_type
 
         return self._frame

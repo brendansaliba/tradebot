@@ -14,8 +14,8 @@ config.set('main', 'ACCOUNT_ID', '426805001')
 config.set('main', 'CREDENTIALS_PATH_MAC', r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/docs/tokens/refreshtoken_Jun6_2021.txt')
 config.set('main', 'JSON_PATH_MAC', r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/data/DataDump')
 
-config.set('main', 'CREDENTIALS_PATH_WIN', r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/docs/tokens/refreshtoken_Jun6_2021.txt')
-config.set('main', 'JSON_PATH_WIN', r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/data/DataDump')
+config.set('main', 'CREDENTIALS_PATH_WIN', r'E:\Projects\TradeBot\python-trading-robot\docs\tokens\refreshtoken_Jun6_2021.txt')
+config.set('main', 'JSON_PATH_WIN', r'E:\Projects\TradeBot\python-trading-robot\data\DataDump')
 
 with open(file='config.ini', mode='w') as f:
     config.write(f)

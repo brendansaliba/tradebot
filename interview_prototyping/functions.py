@@ -47,7 +47,7 @@ def import_credentials():
         JSON_PATH = config.get('main', 'JSON_PATH_MAC')
 
     elif system == 'Windows':
-        config.read(r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/config/config.ini')
+        config.read(r'E:\Projects\TradeBot\python-trading-robot\config\config.ini')
         CLIENT_ID = config.get('main', 'CLIENT_ID')
         REDIRECT_URI = config.get('main', 'REDIRECT_URI')
         ACCOUNT_NUMBER = config.get('main', 'ACCOUNT_NUMBER')
@@ -56,7 +56,7 @@ def import_credentials():
         JSON_PATH = config.get('main', 'JSON_PATH_WIN')
 
     else:
-        config.read(r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/config/config.ini')
+        config.read(r'E:\Projects\TradeBot\python-trading-robot\config\config.ini')
         CLIENT_ID = config.get('main', 'CLIENT_ID')
         REDIRECT_URI = config.get('main', 'REDIRECT_URI')
         ACCOUNT_NUMBER = config.get('main', 'ACCOUNT_NUMBER')

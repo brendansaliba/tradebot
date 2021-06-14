@@ -81,7 +81,7 @@ while True:
     stock_info_df = indicator_client.populate_order_data_2(order=order)
 
     # Save an excel sheet with the data
-    stock_info_df.to_excel(full_path)
+    stock_info_df[269:].to_excel(full_path)
 
     # Grab the latest bar.
     latest_bars = trading_robot.get_latest_bar(TDSession=TDClient, symbol=symbol)
