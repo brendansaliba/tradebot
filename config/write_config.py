@@ -8,7 +8,7 @@ config.add_section('main')
 config.set('main', 'CLIENT_ID', 'IQGJLVUPDVWGRLVIAMNPNW3VAHQBLYVZ')
 config.set('main', 'REDIRECT_URI', 'https://localhost')
 config.set('main', 'ACCOUNT_NUMBER', '71611620')
-config.set('main', 'ACCOUNT_ID', '426805001')
+config.set('main', 'ACCOUNT_ID', '238666280')
 
 # Filepaths
 config.set('main', 'CREDENTIALS_PATH_MAC', r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/docs/tokens/refreshtoken_Jun6_2021.txt')

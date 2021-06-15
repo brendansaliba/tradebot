@@ -1,0 +1,9 @@
+portfolio =
+{
+    'symbol':
+        {
+            'option_symbol': 'NIO_061121C45',
+            'order_response': actual_order_response.txt, robot.currentPositions for symbol,
+            'existing': False
+        }
+}

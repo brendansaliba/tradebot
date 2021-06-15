@@ -108,7 +108,8 @@ class Portfolio():
         else:
             raise TypeError('Positions must be a list of dictionaries.')
 
-    def add_position(self, symbol: str, asset_type: str, purchase_date: Optional[str] = None, quantity: int = 0, purchase_price: float = 0.0) -> dict:
+    def add_position(self, symbol: str, asset_type: str, purchase_date: Optional[str] = None,
+                     quantity: int = 0, purchase_price: float = 0.0) -> dict:
         """Adds a single new position to the the portfolio.
 
         Arguments:

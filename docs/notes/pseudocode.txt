@@ -1,8 +1,8 @@
-Trading bot pseudocode: one symbol trading
-------------------------------------------
-
 Setup bot class with TDSession
 Grab initial historical data between now and 200 periods ago (minute data)
 Convert historical data into a StockFrame
+add required indicators to client
+    9sma etc
 
-
+check for existing positions in TD
+add existing positions to the robot client portfilio

@@ -33,10 +33,17 @@ Look into streaming data from a database to a service - websockets or something 
 
 FOCUS ON THE OPTION WHEN YOU BUY IT LMAO
 
-Write to excel file
-
 Sort positions by strike and purchase time, then we can sell the right positions
 
 Multiple stock positions
 
-Ticker chart rather than 1min
+Ticker chart rather than 1min (2 second)
+
+Change to NoAction from NoAction1
+
+incorporate historical orders
+
+Add NY time to the DF
+
+print contract symbol and signal to console
+

@@ -27,6 +27,7 @@ def setup_func():
     # Create a Portfolio
     trading_robot_portfolio = trading_robot.create_portfolio()
     print("Portfolio created.")
+    print('Trading with account:', ACCOUNT_ID)
     print('='*80)
 
     return trading_robot, td_client

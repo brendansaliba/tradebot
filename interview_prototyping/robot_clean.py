@@ -5,6 +5,7 @@ from interview_prototyping.functions import setup_func
 from interview_prototyping.indicators_isaac import Indicators_Isaac
 
 symbol = "NIO"
+trading_options = True
 
 # Sets up the robot class, robot's portfolio, and the TDSession object
 trading_robot, TDClient = setup_func()
@@ -14,7 +15,6 @@ end_date = datetime.today()
 start_date = end_date - timedelta(minutes=200)  # previously seconds=5 ???
 
 historical_prices = trading_robot.grab_historical_prices(
-    TDClient=TDClient,
     start=end_date,
     end=start_date,
     bar_size=1,
@@ -25,17 +25,14 @@ historical_prices = trading_robot.grab_historical_prices(
 # Convert data to a Data StockFrame.
 stock_frame = trading_robot.create_stock_frame(data=historical_prices['aggregated'])
 
-# We can also add the stock frame to the Portfolio object.
-# trading_robot.portfolio.stock_frame = stock_frame
-
-# Additionally the historical prices can be set as well.
-# trading_robot.portfolio.historical_prices = historical_prices
+# Get positions on startup
+trading_robot.get_positions_for_symbol(symbol=symbol)
 
 # Get current date and create the excel sheet name
 now = datetime.now().strftime("%Y_%m_%d-%I%M_%p")
 filename = "{}_run_{}".format(symbol, now)
 json_path = trading_robot.json_path
-full_path = json_path + r"\Excel Sheets" + filename + ".xlsx"
+full_path = json_path + r"\\" + filename + ".xlsx"
 
 # Create an indicator Object.
 indicator_client = Indicators_Isaac(price_data_frame=stock_frame)
@@ -56,26 +53,26 @@ indicator_client.buy_condition(TDClient, symbol)
 # Define initial refresh time so we know when to refresh the TDClient
 refresh_time = datetime.now() + timedelta(minutes=21)
 
+# Do the loop
 while True:
-    # update token after 21 minutes
+    # Update token after 21 minutes
     if datetime.now() > refresh_time:
         TDClient.login()
         print('refresh')
         refresh_time = datetime.now() + timedelta(minutes=21)
 
+    # Get the stock DF from indicators
     stock_df = indicator_client.stock_data
-    signal_list = indicator_client.indicator_signal_list
+    # print(stock_df.tail())
 
-    print(stock_df.tail())
+    # Send signals, puts, and calls to the bot client
+    trading_robot.signals = indicator_client.indicator_signal_list
+    trading_robot.call_options = indicator_client.calls_options
+    trading_robot.put_options = indicator_client.puts_options
 
-    # TODO Send signals and list of options to the bot object
-
-    # Set the StockFrame in the robot to the one from the indicator client because shitty spaghetti code
+    # Set the StockFrame in the robot to the same as the indicator one
     trading_robot.stock_frame = stock_df
-    order, order_response = trading_robot.execute_orders_2(TDSession=TDClient,
-                                                           symbol=symbol,
-                                                           signal_list=signal_list,
-                                                           trading_options=True)
+    order, order_response = trading_robot.execute_orders_2(symbol=symbol, trading_options=trading_options)
 
     # Add order info to the dataframe
     stock_info_df = indicator_client.populate_order_data_2(order=order)
@@ -96,13 +93,8 @@ while True:
     # Refresh the Indicators.
     indicator_client.refresh()
 
-    # Check for signals.
-    signals = indicator_client.check_signals()
-
     # Grab the last bar.
-    last_bar_timestamp = trading_robot.stock_frame.tail(
-        n=1
-    ).index.get_level_values(1)
+    last_bar_timestamp = trading_robot.stock_frame.tail(n=1).index.get_level_values(1)
 
     # Wait till the next bar.
     trading_robot.wait_till_next_bar(last_bar_timestamp=last_bar_timestamp)

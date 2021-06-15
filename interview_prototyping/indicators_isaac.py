@@ -54,6 +54,8 @@ class Indicators_Isaac():
 
         self.stock_data = None
         self.indicator_signal_list = []
+        self.calls_options = []
+        self.puts_options = []
 
         # TODO: use Alex's add_rows() function instead of updating whole dataframe
         self._frame = self._stock_frame.frame
@@ -656,6 +658,7 @@ class Indicators_Isaac():
         for i in range(len(self._frame)):
             temp_symbol_list.append(options_list_calls[max_volume_calls_index].get("symbol"))
         self._frame['calls_option'] = pd.Series(temp_symbol_list).values
+        self.calls_options = temp_symbol_list
 
         temp_symbol_list = []
         for i in range(len(self._frame)):
@@ -702,6 +705,7 @@ class Indicators_Isaac():
         for i in range(len(self._frame)):
             temp_symbol_list.append(options_list_puts[max_volume_puts_index].get("symbol"))
         self._frame['puts_option'] = pd.Series(temp_symbol_list).values
+        self.puts_options = temp_symbol_list
 
         temp_symbol_list = []
         for i in range(len(self._frame)):
@@ -953,7 +957,7 @@ class Indicators_Isaac():
         self._current_indicators['buy_condition']['args'] = locals_data
         self._current_indicators['buy_condition']['func'] = self.buy_condition
 
-        temp_list = []
+        signal_list = []
 
         global buy_and_sell_count
         buy_calls_count = 0
@@ -964,43 +968,34 @@ class Indicators_Isaac():
         no_action_puts_count = 0
 
         # Generates signals column called buy_condition
-        # TODO Change name so that it makes sense (not always a buy condition)
         for i in range(len(self._frame)):
-
             # Buy CALLS condition
             if self._frame["sma_9_slope"][i] > 0 and \
                     self._frame["sma_volume_50_slope"][i] > 0 and \
                     self._frame['sma9_crossed_sma50'][i] == "9maAbove50ma":
                 no_action_calls_count = 0
                 buy_calls_count += 1
-                temp_list.append('Buy Calls ' + str(buy_calls_count) + ' ' + symbol)
+                signal_list.append('Buy Calls ' + str(buy_calls_count) + ' ' + symbol)
 
-            # Buy PUTS condition TODO Add 50sma below 200sma
-            # TODO Sometimes sells an option that it thinks it still has but it doesnt
+            # Buy PUTS condition
             elif self._frame["sma_9_slope"][i] < 0 and \
                     self._frame["sma_volume_50_slope"][i] < 0 and \
                     self._frame['sma9_crossed_sma50'][i] == "9maBelow50ma" and \
                     self._frame['sma_200'][i] > self._frame['sma_50'][i]:
                 no_action_puts_count = 0
                 buy_puts_count += 1
-                temp_list.append('Buy Puts ' + str(buy_puts_count) + ' ' + symbol)
+                signal_list.append('Buy Puts ' + str(buy_puts_count) + ' ' + symbol)
 
             # NO ACTION condition
             else:
-                # no_action_count +=1
-                buy_calls_count = 0
-                buy_puts_count = 0
-                # temp_list.append('No action'+str(no_action_count))
-                # print("No action taken.")
-                temp_list.append('No action1')
+                signal_list.append('No action')
 
-        # Sets a column in the dataframe containing the buy signals
-        # ['Buy Calls 1 PETS', 'Buy Puts 1 PETS', 'No action1']
-        self._frame["buy_condition"] = pd.Series(temp_list).values
+        # Sets a column in the dataframe containing the  signals: ['Buy Calls 1 PETS', 'Buy Puts 1 PETS', 'No action1']
+        self._frame["buy_condition"] = pd.Series(signal_list).values
         self.stock_data = self._frame
-        self.indicator_signal_list = temp_list
+        self.indicator_signal_list = signal_list
 
-        return self._frame, temp_list
+        return self._frame, signal_list
 
     def sma9_crossed_sma50(self):
 
