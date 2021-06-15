@@ -1,8 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 
-from interview_prototyping.functions import setup_func
-from interview_prototyping.indicators_isaac import Indicators_Isaac
+from functions import setup_func
+from indicators_isaac import Indicators_Isaac
 
 symbol = "PETS"
 

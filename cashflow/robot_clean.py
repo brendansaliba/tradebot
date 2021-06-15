@@ -1,8 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 
-from interview_prototyping.functions import setup_func
-from interview_prototyping.indicators_isaac import Indicators_Isaac
+from functions import setup_func
+from indicators_isaac import Indicators_Isaac
 
 symbol = "NIO"
 trading_options = True
@@ -32,7 +32,7 @@ trading_robot.get_positions_for_symbol(symbol=symbol)
 now = datetime.now().strftime("%Y_%m_%d-%I%M_%p")
 filename = "{}_run_{}".format(symbol, now)
 json_path = trading_robot.json_path
-full_path = json_path + r"\\" + filename + ".xlsx"
+full_path = json_path + r"/" + filename + ".xlsx"
 
 # Create an indicator Object.
 indicator_client = Indicators_Isaac(price_data_frame=stock_frame)

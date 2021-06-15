@@ -7,7 +7,7 @@ import platform
 import os
 import random
 from datetime import datetime
-from interview_prototyping.functions import setup_func
+from functions import setup_func
 
 symbol = "TSLA"
 trading_options = True

@@ -1,7 +1,7 @@
 import platform
 
 from configparser import ConfigParser
-from interview_prototyping.robot import PyRobot
+from robot import PyRobot
 
 
 def setup_func():

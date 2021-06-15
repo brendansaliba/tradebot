@@ -11,9 +11,9 @@ from typing import List
 from typing import Dict
 from typing import Union
 
-from interview_prototyping.trades import Trade
-from interview_prototyping.portfolio import Portfolio
-from interview_prototyping.stock_frame import StockFrame
+from trades import Trade
+from portfolio import Portfolio
+from stock_frame import StockFrame
 
 from td.client import TDClient
 from td.utils import TDUtilities
@@ -880,7 +880,11 @@ class PyRobot():
         call_symbol = self.call_options[-1]  # last element in the calls_option column
         put_symbol = self.put_options[-1]
         signal = self.signals[-1]
-        buy_n = int(signal.split()[-2])
+        if "Buy" in signal or "Sell" in signal:
+            buy_n = int(signal.split()[-2])
+        else:
+            buy_n = 1
+
         print(signal)
 
         # Buys and sells CALL options ===============================================================
@@ -890,15 +894,15 @@ class PyRobot():
             # buy condition met and no position held in ameritrade
             if buy_n >= 2 and calls_quantity < 1:
                 instruction = "BUY_TO_OPEN"
-                print("Buying CALL option for {} at time: ".format(symbol), datetime.now().time())
 
                 # if we don't own any of the current option symbol, otherwise, don't buy
                 if not self.portfolio.in_portfolio(call_symbol):
+                    print("Buying CALL option for {} at time: ".format(symbol), datetime.now().time())
                     # BUY THE CALLS
                     # TODO UNCOMMENT TO ACTUALLY BUY
-                    order, order_response = self.buy_stock(symbol=symbol,
-                                                           option_symbol=call_symbol,
-                                                           instruction=instruction)
+                    # order, order_response = self.buy_stock(symbol=symbol,
+                    #                                        option_symbol=call_symbol,
+                    #                                        instruction=instruction)
                 elif self.portfolio.in_portfolio(call_symbol):
                     print("Already have option {}.".format(call_symbol))
                     # TODO Implement a function to check for other options for the same underlying that may be sold
@@ -915,17 +919,17 @@ class PyRobot():
 
             # sell condition met and we have CALLS in the portfolio, abs value between 9-50 ma is decreasing
             if stock_data["abs_9_minus_50_slope"][-1] < stock_data["abs_9_minus_50_slope"][-2] and \
-                    stock_data['sma9_crossed_sma50'] == '9maAbove50ma' and calls_quantity >= 1:
+                    stock_data['sma9_crossed_sma50'][-1] == '9maAbove50ma' and calls_quantity >= 1:
                 instruction = "SELL_TO_CLOSE"
-                print("Selling CALL options.")
 
                 # if we own a call, sell it, otherwise, don't sell
                 if self.portfolio.in_portfolio(call_symbol):
+                    print("Selling CALL options.")
                     # SELL THE CALLS
                     # TODO UNCOMMENT TO ACTUALLY SELL
-                    order, order_response = self.sell_stock(symbol=symbol,
-                                                            option_symbol=call_symbol,
-                                                            instruction=instruction)
+                    # order, order_response = self.sell_stock(symbol=symbol,
+                    #                                         option_symbol=call_symbol,
+                    #                                         instruction=instruction)
                 elif not self.portfolio.in_portfolio(call_symbol):
                     print("Do not have option {}.".format(call_symbol))
                     # TODO Implement a function to check for other options for the same underlying that may be sold
@@ -943,15 +947,15 @@ class PyRobot():
             # buy puts condition met and no position held in TD
             if buy_n >= 2 and puts_quantity < 1:
                 instruction = "BUY_TO_OPEN"
-                print("Buying PUT option for {} at time: ".format(symbol), datetime.now().time())
 
                 # if we don't own any of the current option symbol, otherwise, don't buy
                 if not self.portfolio.in_portfolio(put_symbol):
+                    print("Buying PUT option for {} at time: ".format(symbol), datetime.now().time())
                     # BUY THE PUTS
                     # TODO UNCOMMENT TO ACTUALLY BUY
-                    order, order_response = self.buy_stock(symbol=symbol,
-                                                           option_symbol=put_symbol,
-                                                           instruction=instruction)
+                    # order, order_response = self.buy_stock(symbol=symbol,
+                    #                                        option_symbol=put_symbol,
+                    #                                        instruction=instruction)
                 elif self.portfolio.in_portfolio(put_symbol):
                     print("Already have option {}.".format(put_symbol))
                     # TODO Implement a function to check for other options for the same underlying that may be sold
@@ -967,17 +971,17 @@ class PyRobot():
 
             # Sell PUTS logic
             if stock_data["abs_9_minus_50_slope"][-1] < stock_data["abs_9_minus_50_slope"][-2] and \
-                    stock_data['sma9_crossed_sma50'] == '9maBelow50ma' and puts_quantity >= 1:
+                    stock_data['sma9_crossed_sma50'][-1] == '9maBelow50ma' and puts_quantity >= 1:
                 instruction = "SELL_TO_CLOSE"
-                print("Selling PUT options.")
 
                 # if we own a put, sell it, otherwise, don't sell
                 if put_symbol in self.portfolio.positions:
+                    print("Selling PUT options.")
                     # SELL THE CALLS
                     # TODO UNCOMMENT TO ACTUALLY SELL
-                    order, order_response = self.sell_stock(symbol=symbol,
-                                                            option_symbol=put_symbol,
-                                                            instruction=instruction)
+                    # order, order_response = self.sell_stock(symbol=symbol,
+                    #                                         option_symbol=put_symbol,
+                    #                                         instruction=instruction)
                 elif not self.portfolio.in_portfolio(put_symbol):
                     print("Do not have option {}.".format(put_symbol))
                     # TODO Implement a function to check for other options for the same underlying that may be sold

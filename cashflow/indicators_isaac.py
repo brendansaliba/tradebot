@@ -9,8 +9,8 @@ from typing import Dict
 from typing import Union
 from typing import Optional
 from typing import Tuple
-from pyrobot.stock_frame import StockFrame
-from pyrobot.portfolio import Portfolio
+from stock_frame import StockFrame
+from portfolio import Portfolio
 import datetime
 
 pd.set_option('display.expand_frame_repr', False)

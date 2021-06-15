@@ -1,4 +1,4 @@
-from pyrobot.trades import Trade
+from trades import Trade
 from td.client import TDClient
 
 class OrderStatus():
