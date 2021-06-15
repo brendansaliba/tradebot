@@ -853,6 +853,16 @@ class PyRobot():
         Returns:
         ----
         {dict} -- An order response dicitonary.
+
+        Portfolio position format
+            {
+                'asset_type': 'equity',
+                'quantity': 2,
+                'purchase_price': 4.00,
+                'symbol': 'MSFT',
+                'purchase_date': '2020-01-31'
+            }
+
         """
 
         # Required variables
@@ -882,13 +892,18 @@ class PyRobot():
                 instruction = "BUY_TO_OPEN"
                 print("Buying CALL option for {} at time: ".format(symbol), datetime.now().time())
 
-                # BUY THE CALLS
-                # UNCOMMENT TO ACTUALY BUY
-                # order, order_response = self.buy_stock(symbol=symbol,
-                #                                         option_symbol=call_symbol,
-                #                                         instruction=instruction,
-                #                                         TDSession=self.session,
-                #                                         trading_options=True)
+                # if we don't own any of the current option symbol, otherwise, don't buy
+                if not self.portfolio.in_portfolio(call_symbol):
+                    # BUY THE CALLS
+                    # TODO UNCOMMENT TO ACTUALLY BUY
+                    order, order_response = self.buy_stock(symbol=symbol,
+                                                           option_symbol=call_symbol,
+                                                           instruction=instruction)
+                elif self.portfolio.in_portfolio(call_symbol):
+                    print("Already have option {}.".format(call_symbol))
+                    # TODO Implement a function to check for other options for the same underlying that may be sold
+                else:
+                    print("Something went wrong.")
 
                 buy_and_sell_count = 1
                 buy_calls_count += 1
@@ -904,13 +919,18 @@ class PyRobot():
                 instruction = "SELL_TO_CLOSE"
                 print("Selling CALL options.")
 
-                # Sell CALLS
-                # UNCOMMENT TO ACTUALLY SELL
-                # order, order_response = self.sell_stock(symbol=symbol,
-                #                                         option_symbol=call_symbol,
-                #                                         instruction=instruction,
-                #                                         trading_options=True)
-
+                # if we own a call, sell it, otherwise, don't sell
+                if self.portfolio.in_portfolio(call_symbol):
+                    # SELL THE CALLS
+                    # TODO UNCOMMENT TO ACTUALLY SELL
+                    order, order_response = self.sell_stock(symbol=symbol,
+                                                            option_symbol=call_symbol,
+                                                            instruction=instruction)
+                elif not self.portfolio.in_portfolio(call_symbol):
+                    print("Do not have option {}.".format(call_symbol))
+                    # TODO Implement a function to check for other options for the same underlying that may be sold
+                else:
+                    print("Something went wrong.")
 
                 buy_and_sell_count = 0
             else:
@@ -925,12 +945,18 @@ class PyRobot():
                 instruction = "BUY_TO_OPEN"
                 print("Buying PUT option for {} at time: ".format(symbol), datetime.now().time())
 
-                # BUY THE PUTS
-                # UNCOMMENT TO ACTUALLY BUY
-                # order, order_response = self.buy_stock(symbol=symbol,
-                #                                         option_symbol=put_symbol,
-                #                                         instruction=instruction,
-                #                                         trading_options=True)
+                # if we don't own any of the current option symbol, otherwise, don't buy
+                if not self.portfolio.in_portfolio(put_symbol):
+                    # BUY THE PUTS
+                    # TODO UNCOMMENT TO ACTUALLY BUY
+                    order, order_response = self.buy_stock(symbol=symbol,
+                                                           option_symbol=put_symbol,
+                                                           instruction=instruction)
+                elif self.portfolio.in_portfolio(put_symbol):
+                    print("Already have option {}.".format(put_symbol))
+                    # TODO Implement a function to check for other options for the same underlying that may be sold
+                else:
+                    print("Something went wrong.")
 
                 buy_and_sell_count = 1
                 buy_puts_count += 1
@@ -945,12 +971,18 @@ class PyRobot():
                 instruction = "SELL_TO_CLOSE"
                 print("Selling PUT options.")
 
-                # Sell PUTS
-                # UNCOMMENT TO ACTUALLY SELL
-                # order, order_response = self.sell_stock(symbol=symbol,
-                #                                         option_symbol=put_symbol,
-                #                                         instruction=instruction,
-                #                                         trading_options=True)
+                # if we own a put, sell it, otherwise, don't sell
+                if put_symbol in self.portfolio.positions:
+                    # SELL THE CALLS
+                    # TODO UNCOMMENT TO ACTUALLY SELL
+                    order, order_response = self.sell_stock(symbol=symbol,
+                                                            option_symbol=put_symbol,
+                                                            instruction=instruction)
+                elif not self.portfolio.in_portfolio(put_symbol):
+                    print("Do not have option {}.".format(put_symbol))
+                    # TODO Implement a function to check for other options for the same underlying that may be sold
+                else:
+                    print("Something went wrong.")
 
                 stock_data["buy_count"] = -1
                 buy_and_sell_count = 0
@@ -997,15 +1029,16 @@ class PyRobot():
                 account=self.account_id,
                 order=order_template
             )
-            print(instruction, " order placed for ", symbol)
+            print(instruction, "order placed for", symbol)
 
             # Process the response
-            order_leg = order_response['request_body']['orderLegCollection']
-            quantity = order_leg['longQuantity']
+            order_leg = order_response['request_body']['orderLegCollection'][0]
+            quantity = order_leg['quantity']
             average_price = 0
             asset_type = order_leg['instrument']['assetType']
             position_symbol = order_leg['instrument']['symbol']
 
+            # If symbol isn't in portfolio, add it
             if not self.portfolio.in_portfolio(position_symbol):
                 self.portfolio.add_position(symbol=position_symbol,
                                             asset_type=asset_type,
@@ -1019,57 +1052,69 @@ class PyRobot():
             return order_template, order_response
 
         except Exception as e:
-            print("Error trying to place ", instruction, " for ", symbol)
+            print("Error trying to place", instruction, "for", symbol)
             print(str(e))
             return order_template, order_response
 
-    def sell_stock(self, symbol, option_symbol, instruction: str, trading_options: bool):
+    def sell_stock(self, symbol, option_symbol, instruction: str):
+        """
+        Portfolio format
+            {
+                'asset_type': 'equity',
+                'quantity': 2,
+                'purchase_price': 4.00,
+                'symbol': 'MSFT',
+                'purchase_date': '2020-01-31'
+            }
+        """
+
         # Go away warnings
         order_response = {}
 
-        # Loop through the positions we own for a stock symbol
-        for index, position in enumerate(self.jank_portfolio[symbol]):
-            # Get the order of the symbol
-            option_symbol = position['order_response']['request_body']['orderLegCollection'][0]['instrument']['symbol']
+        # Check if we have position in our portfolio
+        if self.portfolio.in_portfolio(option_symbol):
+            quantity = self.portfolio.positions[option_symbol]['quantity']
+        else:
+            print("Do not have any {}".format(option_symbol))
+            return
 
-            # Define the Order.
-            new_order_response = {}
-            order_template = {
-                "orderType": "MARKET",  # "LIMIT"
-                "session": "NORMAL",
-                "duration": "DAY",
-                # "price": .01, # add for limit order
-                "orderStrategyType": "SINGLE",
-                "orderLegCollection": [
-                    {
-                        "instruction": instruction,  # "BUY_TO_OPEN", "SELL_TO_CLOSE"
-                        "quantity": 1,  # number of instruments
-                        "instrument": {
-                            "symbol": option_symbol,
-                            "assetType": "OPTION"  # "EQUITY"
-                        }
+        # Define the Order.
+        new_order_response = {}
+        order_template = {
+            "orderType": "MARKET",  # "LIMIT"
+            "session": "NORMAL",
+            "duration": "DAY",
+            # "price": .01, # add for limit order
+            "orderStrategyType": "SINGLE",
+            "orderLegCollection": [
+                {
+                    "instruction": instruction,  # "BUY_TO_OPEN", "SELL_TO_CLOSE"
+                    "quantity": quantity,  # number of instruments
+                    "instrument": {
+                        "symbol": option_symbol,
+                        "assetType": "OPTION"  # "EQUITY"
                     }
-                ]
-            }
+                }
+            ]
+        }
 
-            # Place the Order.
-            try:
-                order_response = self.session.place_order(
-                    account=self.account_id,
-                    order=order_template
-                )
-                print(instruction, " order placed for ", symbol)
+        # Place the Order.
+        try:
+            order_response = self.session.place_order(
+                account=self.account_id,
+                order=order_template
+            )
+            print(instruction, "order placed for", symbol)
 
-                # Remove the response from the portfolio and add to the outdated one
-                self.jank_portfolio[symbol].remove(index)
-                self.old_responses.append(new_order_response)
+            # Remove from the portfolio
+            self.portfolio.remove_position(option_symbol)
 
+            return order_template, order_response
+
+        except Exception as e:
+                print("Error trying to place ", instruction, " for ", symbol)
+                print(str(e))
                 return order_template, order_response
-
-            except Exception as e:
-                    print("Error trying to place ", instruction, " for ", symbol)
-                    print(str(e))
-                    return order_template, order_response
 
     def currentPositions(self, TDSession):
         accounts_info = TDSession.get_accounts(account='all', fields=['orders', 'positions'])
