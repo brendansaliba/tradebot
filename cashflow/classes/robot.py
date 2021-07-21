@@ -11,9 +11,9 @@ from typing import List
 from typing import Dict
 from typing import Union
 
-from trades import Trade
-from portfolio import Portfolio
-from stock_frame import StockFrame
+from cashflow.classes.trades import Trade
+from cashflow.classes.portfolio import Portfolio
+from cashflow.classes.stock_frame import StockFrame
 
 from td.client import TDClient
 from td.utils import TDUtilities

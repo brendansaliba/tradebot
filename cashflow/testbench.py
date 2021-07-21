@@ -10,7 +10,6 @@ from datetime import datetime
 from functions import setup_func
 
 symbol = "TSLA"
-trading_options = True
 
 trading_robot, TDClient = setup_func()
 

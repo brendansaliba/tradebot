@@ -6,7 +6,7 @@ from typing import List
 from typing import Optional
 
 
-from pyrobot.stock_frame import StockFrame
+from cashflow.classes.stock_frame import StockFrame
 from td.client import TDClient
 
 

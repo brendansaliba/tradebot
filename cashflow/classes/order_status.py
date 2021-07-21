@@ -1,4 +1,4 @@
-from trades import Trade
+from cashflow.classes.trades import Trade
 from td.client import TDClient
 
 class OrderStatus():

@@ -1,7 +1,7 @@
 import platform
 
 from configparser import ConfigParser
-from robot import PyRobot
+from cashflow.classes.robot import PyRobot
 
 
 def setup_func():

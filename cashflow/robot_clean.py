@@ -2,7 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from functions import setup_func
-from indicators_isaac import Indicators_Isaac
+from cashflow.classes.indicators_isaac import Indicators_Isaac
 
 symbol = "NIO"
 trading_options = True
@@ -78,7 +78,7 @@ while True:
     stock_info_df = indicator_client.populate_order_data_2(order=order)
 
     # Save an excel sheet with the data
-    stock_info_df[269:].to_excel(full_path)
+    # stock_info_df[269:].to_excel(full_path)
 
     # Grab the latest bar.
     latest_bars = trading_robot.get_latest_bar(TDSession=TDClient, symbol=symbol)
