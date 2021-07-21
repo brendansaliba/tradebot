@@ -9,9 +9,9 @@ setup(
 
     name='python-trading-robot',
 
-    author='Alex Reed',
+    author='Brendan Saliba',
 
-    author_email='coding.sigma@gmail.com',
+    author_email='brendanbsaliba@gmail.com',
 
     version='0.1.1',
 
