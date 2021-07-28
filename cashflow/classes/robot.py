@@ -141,7 +141,7 @@ class PyRobot():
 
     def _get_historical_prices(self) -> pandas.DataFrame:
         """
-        Yes, things.
+        Yes, things. Stuff also.
         """
         end_date = datetime.today()
         start_date = end_date - timedelta(minutes=200)  # previously seconds=5 ???
