@@ -5,10 +5,16 @@ from cashflow.classes.robot import PyRobot
 
 
 def setup_func():
-    # Get credentials
+    """
+    Imports credentials from config and initializes a robot object. Then, the function initializes a session with the TD
+    client. A portfolio object within the robot object is also automatically created. Function returns the robot object.
+    """
+    print('=' * 80)
+    print("Beginning setup...")
+
     CLIENT_ID, REDIRECT_URI, CREDENTIALS_PATH, ACCOUNT_NUMBER, ACCOUNT_ID, JSON_PATH = import_credentials()
 
-    # Initalize the robot with my credentials.
+    # Initialize the robot object with credentials.
     trading_robot = PyRobot(
         client_id=CLIENT_ID,
         redirect_uri=REDIRECT_URI,
@@ -17,28 +23,26 @@ def setup_func():
         account_id=ACCOUNT_ID,
         json_path=JSON_PATH
     )
-    print("Bot created.")
 
-    # Create TDSession
-    # td_client = trading_robot._create_session()
+    # Extract TD Session from the robot object
     td_client = trading_robot.session
-    print("Session created.")
 
     # Create a Portfolio
-    trading_robot_portfolio = trading_robot.create_portfolio()
-    print("Portfolio created.")
-    print('Trading with account:', ACCOUNT_ID)
+    bot_portfolio = trading_robot.portfolio
+    print("Setup complete.")
     print('='*80)
 
-    return trading_robot, td_client
-
+    return trading_robot
 
 def import_credentials():
+    """
+    Imports credentials from /config/config.ini based on whichever system the script is being run on.
+    """
+
     system = platform.system()
     config = ConfigParser()
 
     if system == 'Darwin':
-        # Grab configuration values.
         config.read(r'/Users/brendansaliba/Projects/TradeBot/tradebot_prototype/config/config.ini')
         CLIENT_ID = config.get('main', 'CLIENT_ID')
         REDIRECT_URI = config.get('main', 'REDIRECT_URI')

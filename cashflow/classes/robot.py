@@ -1,6 +1,8 @@
 import json
 import time as time_true
 import pathlib
+
+import pandas
 import pandas as pd
 
 from datetime import datetime
@@ -14,6 +16,7 @@ from typing import Union
 from cashflow.classes.trades import Trade
 from cashflow.classes.portfolio import Portfolio
 from cashflow.classes.stock_frame import StockFrame
+from cashflow.classes.indicators import Indicators
 
 from td.client import TDClient
 from td.utils import TDUtilities
@@ -24,7 +27,7 @@ milliseconds_since_epoch = TDUtilities().milliseconds_since_epoch
 
 class PyRobot():
 
-    def __init__(self, client_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, json_path: str = None, trading_account: str = None, account_id: str = None) -> None:
+    def __init__(self, client_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, json_path: str = None, trading_account: str = None, account_id: str = None, trading_symbol: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
 
         Arguments:
@@ -45,24 +48,30 @@ class PyRobot():
         """
 
         # Set the attirbutes
+        print("Bot created...")
         self.trading_account = trading_account
         self.account_id = account_id
         self.client_id = client_id
         self.redirect_uri = redirect_uri
         self.credentials_path = credentials_path
         self.json_path = json_path
-        self.session: TDClient = self._create_session()
         self.trades = {}
         self.jank_portfolio = {}
         self.old_responses = []
-        self.historical_prices = {}
+        self.historical_prices = None
+
+        # Classes
+        self.session: TDClient = self._create_session()
+        self.portfolio: Portfolio = self._create_portfolio()
+        self.stock_frame: StockFrame = self._create_stock_frame()
+        self.indicator: Indicators = self._create_indicator_client()
 
         # Trading stuff
         self.signals = []
         self.call_options = []
         self.put_options = []
+        self.trading_symbol = trading_symbol
 
-        self.stock_frame: StockFrame = None
         self.paper_trading = paper_trading
 
         self._bar_size = None
@@ -89,8 +98,84 @@ class PyRobot():
 
         # log the client into the new session
         td_client.login()
+        print("TDClient session created and logged in...")
+        print('Trading with account:', self.account_id)
 
         return td_client
+
+    def _create_portfolio(self) -> Portfolio:
+        """Create a new portfolio.
+
+        Creates a Portfolio Object to help store and organize positions
+        as they are added and removed during trading.
+
+        Returns:
+        ----
+        Portfolio -- A pyrobot.Portfolio object with no positions.
+        """
+
+        # Initalize the portfolio.
+        self.portfolio = Portfolio(account_number=self.trading_account)
+        print("Portfolio created...")
+
+        # Assign the Client
+        self.portfolio.td_client = self.session
+
+        return self.portfolio
+
+    def _create_indicator_client(self) -> Indicators:
+        """Create a new indicator client.
+
+        Returns:
+        ----
+        Indicator -- A pyrobot.Indicator object with no indicators.
+        """
+
+        self.indicator = Indicators(price_data_frame=self.stock_frame)
+        print("Indicator client created...")
+
+        # Assign the Client
+        self.indicator.td_client = self.session
+
+        return self.indicator
+
+    def _get_historical_prices(self) -> pandas.DataFrame:
+        """
+        Yes, things.
+        """
+        end_date = datetime.today()
+        start_date = end_date - timedelta(minutes=200)  # previously seconds=5 ???
+
+        historical_prices = self.grab_historical_prices(
+            start=end_date,
+            end=start_date,
+            bar_size=1,
+            bar_type='minute',
+            symbols=[self.trading_symbol]
+        )
+
+        self.historical_prices = historical_prices['aggregated']
+
+        return self.historical_prices
+
+    def _create_stock_frame(self) -> StockFrame:
+        """Generates a new StockFrame Object.
+
+        Arguments:
+        ----
+        data {List[dict]} -- The data to add to the StockFrame object.
+
+        Returns:
+        ----
+        StockFrame -- A multi-index pandas data frame built for trading.
+        """
+
+        data = self._get_historical_prices()
+
+        # Create the Frame.
+        self.stock_frame = StockFrame(data=data)
+
+        return self.stock_frame
 
     @property
     def pre_market_open(self) -> bool:
@@ -220,36 +305,6 @@ class PyRobot():
             return True
         else:
             return False
-
-    def create_portfolio(self) -> Portfolio:
-        """Create a new portfolio.
-
-        Creates a Portfolio Object to help store and organize positions
-        as they are added and removed during trading.
-
-        Usage:
-        ----
-            >>> trading_robot = PyRobot(
-            client_id=CLIENT_ID,
-            redirect_uri=REDIRECT_URI,
-            credentials_path=CREDENTIALS_PATH
-            )
-            >>> portfolio = trading_robot.create_portfolio()
-            >>> portfolio
-            <pyrobot.portfolio.Portfolio object at 0x0392BF88>
-
-        Returns:
-        ----
-        Portfolio -- A pyrobot.Portfolio object with no positions.
-        """
-
-        # Initalize the portfolio.
-        self.portfolio = Portfolio(account_number=self.trading_account)
-
-        # Assign the Client
-        self.portfolio.td_client = self.session
-
-        return self.portfolio
 
     def create_trade(self, trade_id: str, enter_or_exit: str, long_or_short: str, order_type: str = 'mkt', price: float = 0.0, stop_limit_price=0.0) -> Trade:
         """Initalizes a new instance of a Trade Object.
@@ -541,7 +596,7 @@ class PyRobot():
 
         return self.historical_prices
 
-    def get_latest_bar(self, TDSession, symbol) -> List[dict]:
+    def get_latest_bar(self, symbol) -> List[dict]:
         """Returns the latest bar for each symbol in the portfolio.
 
         Returns:
@@ -579,7 +634,7 @@ class PyRobot():
             try:
 
                 # Grab the request.
-                historical_prices_response = TDSession.get_price_history(
+                historical_prices_response = self.session.get_price_history(
                     symbol=symbol,
                     period_type='day',
                     start_date=start,
@@ -594,7 +649,7 @@ class PyRobot():
                 time_true.sleep(2)
 
                 # Grab the request.
-                historical_prices_response = TDSession.get_price_history(
+                historical_prices_response = self.session.get_price_history(
                     symbol=symbol,
                     period_type='day',
                     start_date=start,
@@ -656,23 +711,6 @@ class PyRobot():
         print('')
 
         time_true.sleep(time_to_wait_now)
-
-    def create_stock_frame(self, data: List[dict]) -> StockFrame:
-        """Generates a new StockFrame Object.
-
-        Arguments:
-        ----
-        data {List[dict]} -- The data to add to the StockFrame object.
-
-        Returns:
-        ----
-        StockFrame -- A multi-index pandas data frame built for trading.
-        """
-
-        # Create the Frame.
-        self.stock_frame = StockFrame(data=data)
-
-        return self.stock_frame
 
     def execute_signals(self, signals: List[pd.Series], trades_to_execute: dict) -> List[dict]:
         """Executes the specified trades for each signal.
@@ -1120,8 +1158,8 @@ class PyRobot():
                 print(str(e))
                 return order_template, order_response
 
-    def currentPositions(self, TDSession):
-        accounts_info = TDSession.get_accounts(account='all', fields=['orders', 'positions'])
+    def current_positions(self):
+        accounts_info = self.session.get_accounts(account='all', fields=['orders', 'positions'])
 
         all_symbols = []
         for account in accounts_info:

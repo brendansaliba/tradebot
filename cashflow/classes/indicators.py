@@ -3,6 +3,7 @@ import pandas as pd
 import operator
 import math
 import json
+import datetime
 
 from typing import Any
 from typing import Dict
@@ -11,7 +12,9 @@ from typing import Optional
 from typing import Tuple
 from cashflow.classes.stock_frame import StockFrame
 from cashflow.classes.portfolio import Portfolio
-import datetime
+
+from td.client import TDClient
+from td.utils import TDUtilities
 
 pd.set_option('display.expand_frame_repr', False)
 pd.set_option('display.max_rows', None)
@@ -19,7 +22,7 @@ pd.set_option('display.width', None)
 pd.set_option('display.max_columns', None)
 
 
-class Indicators_Isaac():
+class Indicators():
     """
     Represents an Indicator Object which can be used
     to easily add technical indicators to a StockFrame.
@@ -52,6 +55,7 @@ class Indicators_Isaac():
         self._current_indicators = {}
         self._indicator_signals = {}
 
+        self.session: TDClient = None
         self.stock_data = None
         self.indicator_signal_list = []
         self.calls_options = []
@@ -589,7 +593,7 @@ class Indicators_Isaac():
                             symbol_new_format_list[1][6:]
         return symbol_new_format
 
-    def max_option_chain(self, TDSession, symbol):
+    def max_option_chain(self, symbol):
         """Returns near the money (NTM) options on the call and put side that are highest volume.
 
           Arguments:
@@ -623,7 +627,7 @@ class Indicators_Isaac():
             "range": "NTM"
         }
 
-        watchlist_info = TDSession.get_options_chain(option_chain=params)
+        watchlist_info = self.session.get_options_chain(option_chain=params)
 
         options_list_calls = []
         options_list_calls_total_volume = []
@@ -724,12 +728,11 @@ class Indicators_Isaac():
 
         return self._frame
 
-    def populate_order_data(self, TDSession, symbol):
+    def populate_order_data(self, symbol, account_id):
         """Populates order data columns in dataframe"""
 
         # Get orders (Which return list of order did in past)
-        # TODO Make account number dynamic
-        transactions_info = TDSession.get_orders(account='71611620')
+        transactions_info = self.session.get_orders(account=account_id)
 
         for order in transactions_info:
             print(order)
@@ -779,7 +782,6 @@ class Indicators_Isaac():
         """Populates order data columns in dataframe"""
 
         # Get orders (Which return list of order did in past)
-        # TODO Make account number dynamic
 
         ''' ORDER TEMPLATE FILLED
             {
@@ -833,7 +835,7 @@ class Indicators_Isaac():
 
         return self._frame
 
-    def buy_stock(self, symbol, instruction, TDSession):
+    def buy_stock(self, symbol, instruction, account_id):
         # Define the Order.
 
         params = {
@@ -865,8 +867,8 @@ class Indicators_Isaac():
 
         # Place the Order.
         try:
-            order_response = TDSession.place_order(
-                account="71611620",
+            order_response = self.session.place_order(
+                account=account_id,
                 order=order_template
             )
             print("successful ", instruction, " for ", symbol)
@@ -876,12 +878,8 @@ class Indicators_Isaac():
             print("Error comes while trying ", instruction)
             print(str(e))
 
-    def currentPositions(self, TDSession):
-        pos = TDSession.get_accounts(account='all', fields=['orders', 'positions'])
-        # 865852744
-        # [0]['securitiesAccount']['positions']
-        # print (pos)
-        # (i['instrument']['symbol'])
+    def current_positions(self):
+        pos = self.session.get_accounts(account='all', fields=['orders', 'positions'])
         x = 0
         allsym = []
         for i in pos:
@@ -893,19 +891,19 @@ class Indicators_Isaac():
             x += 1
         return allsym
 
-    def confirm_order(self, TDSession, order_id):
+    def confirm_order(self, order_id, account_id):
         """Returns order confirmation info from Ameritrade"""
-        order = TDSession.get_orders(
-            account='71611620',
+        order = self.session.get_orders(
+            account=account_id,
             order_id=order_id
         )
         return order['status']
 
-    def query_orders(self, TDSession, symbol, account_id):
+    def query_orders(self, symbol, account_id):
         """Returns order confirmed, quantity filled, and quantity remaining"""
 
         # Get orders (Which return list of order did in past)
-        transactions_info = TDSession.get_orders(
+        transactions_info = self.session.get_orders(
             account=account_id
         )
 
@@ -949,7 +947,7 @@ class Indicators_Isaac():
                 print("Calls Quantity: %d, Puts Quantity: %d" % (cumulative_calls_quantity, cumulative_puts_quantity))
         return filled_orders, cumulative_calls_quantity, cumulative_puts_quantity, remaining_quantity
 
-    def buy_condition(self, TDSession, symbol):
+    def buy_condition(self, symbol):
         locals_data = locals()
         del locals_data['self']
 
