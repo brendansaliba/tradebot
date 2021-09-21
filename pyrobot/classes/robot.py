@@ -11,9 +11,9 @@ from typing import List
 from typing import Dict
 from typing import Union
 
-from pyrobot.trades import Trade
-from pyrobot.portfolio import Portfolio
-from pyrobot.stock_frame import StockFrame
+from pyrobot.classes.trades import Trade
+from pyrobot.classes.portfolio import Portfolio
+from pyrobot.classes.stock_frame import StockFrame
 
 from td.client import TDClient
 from td.utils import TDUtilities

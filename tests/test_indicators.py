@@ -5,16 +5,15 @@ it will test different properties and methods of the object.
 """
 import unittest
 import operator
-import pandas as pd
 
 from unittest import TestCase
 from datetime import datetime
 from datetime import timedelta
 from configparser import ConfigParser
 
-from pyrobot.robot import PyRobot
-from pyrobot.indicators import Indicators
-from pyrobot.stock_frame import StockFrame
+from pyrobot.classes.robot import PyRobot
+from pyrobot.classes.indicators import Indicators
+from pyrobot.classes.stock_frame import StockFrame
 
 
 class PyRobotIndicatorTest(TestCase):

@@ -8,8 +8,8 @@ import unittest
 from unittest import TestCase
 from configparser import ConfigParser
 
-from pyrobot.robot import PyRobot
-from pyrobot.trades import Trade
+from pyrobot.classes.robot import PyRobot
+from pyrobot.classes.trades import Trade
 
 
 class PyRobotTradeTest(TestCase):

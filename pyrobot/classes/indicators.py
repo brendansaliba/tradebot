@@ -5,7 +5,7 @@ from typing import Any
 from typing import Dict
 from typing import Union
 
-from pyrobot.stock_frame import StockFrame
+from pyrobot.classes.stock_frame import StockFrame
 
 class Indicators():
 

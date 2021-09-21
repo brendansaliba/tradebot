@@ -8,7 +8,7 @@ import unittest
 from unittest import TestCase
 from configparser import ConfigParser
 
-from pyrobot.portfolio import Portfolio
+from pyrobot.classes.portfolio import Portfolio
 from td.client import TDClient
 
 

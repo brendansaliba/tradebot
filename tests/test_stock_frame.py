@@ -11,8 +11,8 @@ from datetime import datetime
 from datetime import timedelta
 from configparser import ConfigParser
 
-from pyrobot.robot import PyRobot
-from pyrobot.stock_frame import StockFrame
+from pyrobot.classes.robot import PyRobot
+from pyrobot.classes.stock_frame import StockFrame
 
 
 class PyRobotStockFrameTest(TestCase):

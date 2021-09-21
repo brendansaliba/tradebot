@@ -1,5 +1,5 @@
-from pyrobot.trades import Trade
-from td.client import TDClient
+from pyrobot.classes.trades import Trade
+
 
 class OrderStatus():
 

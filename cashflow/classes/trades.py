@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 
 from typing import List
@@ -902,7 +901,7 @@ class Trade():
             properties to grab the order status.
         """
 
-        from pyrobot.order_status import OrderStatus
+        from pyrobot.classes.order_status import OrderStatus
 
         return OrderStatus(trade_obj=self)
 

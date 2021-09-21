@@ -94,7 +94,7 @@ Once you've identfied those pieces of info, you can run the robot. Here is a sim
 of it:
 
 ```python
-from pyrobot.robot import PyRobot
+from pyrobot.classes.robot import PyRobot
 
 # Initialize the robot
 trading_robot = PyRobot(

@@ -9,14 +9,12 @@ import pprint
 
 from unittest import TestCase
 from datetime import datetime
-from datetime import timezone
 from datetime import timedelta
 from configparser import ConfigParser
 
-from pyrobot.trades import Trade
-from pyrobot.robot import PyRobot
-from pyrobot.portfolio import Portfolio
-from pyrobot.stock_frame import StockFrame
+from pyrobot.classes.trades import Trade
+from pyrobot.classes.robot import PyRobot
+from pyrobot.classes.portfolio import Portfolio
 
 
 class PyRobotTest(TestCase):

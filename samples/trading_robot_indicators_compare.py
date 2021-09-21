@@ -5,8 +5,8 @@ from datetime import datetime
 from datetime import timedelta
 from configparser import ConfigParser
 
-from pyrobot.robot import PyRobot
-from pyrobot.indicators import Indicators
+from pyrobot.classes.robot import PyRobot
+from pyrobot.classes.indicators import Indicators
 
 # Grab configuration values.
 config = ConfigParser()
