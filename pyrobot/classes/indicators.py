@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 
@@ -6,6 +7,8 @@ from typing import Dict
 from typing import Union
 
 from pyrobot.classes.stock_frame import StockFrame
+from td.client import TDClient
+
 
 class Indicators():
 
@@ -40,6 +43,7 @@ class Indicators():
         self._current_indicators = {}
         self._indicator_signals = {}
         self._frame = self._stock_frame.frame
+        self.session: TDClient = None
 
         self._indicators_comp_key = []
         self._indicators_key = []
@@ -214,6 +218,239 @@ class Indicators():
 
         return self._frame
 
+    def percent_change(self) -> pd.DataFrame:
+        locals_data = locals()
+        del locals_data['self']
+
+        self._current_indicators['percent_change'] = {}
+        self._current_indicators['percent_change']['args'] = locals_data
+        self._current_indicators['percent_change']['func'] = self.percent_change
+
+        # calculate per of change
+        percent_change = []
+        count = 0
+
+        while count < len(self._frame):
+            if count == 0:
+                percent_change.append(0)
+                prev = next = self._frame["close"][count]
+            else:
+                prev = next
+                next = self._frame["close"][count]
+                percent_change.append(round(((next - prev) / prev) * 100, 3))
+            count += 1
+
+        self._frame['percent_change'] = pd.Series(percent_change).values
+
+        return self._frame
+
+    def sma9_crossed_sma50(self):
+
+        # def calculate(row):
+        #     if row["sma_9"].item() == 0 or row["sma_50"].item() == 0:
+        #         val = 0
+        #     elif self._frame["sma_9"].item() > self._frame["sma_50"].item():
+        #         value = '9maAbove50ma'
+        #     else:
+        #         value = '9maBelow50ma'
+        #     return  value
+
+        locals_data = locals()
+        del locals_data['self']
+
+        self._current_indicators['sma9_crossed_sma50'] = {}
+        self._current_indicators['sma9_crossed_sma50']['args'] = locals_data
+        self._current_indicators['sma9_crossed_sma50']['func'] = self.sma9_crossed_sma50
+
+        temp_list = []
+        crossed_above = False
+        crossed_below = False
+        for i in range(len(self._frame)):
+            if self._frame["sma_9"][i] == 0 or self._frame["sma_50"][i] == 0 or self._frame["sma_50"][i] == \
+                    self._frame["sma_9"][i]:
+                temp_list.append(0)
+            elif self._frame["sma_9"][i] > self._frame["sma_50"][i]:
+                if crossed_above == False:
+                    crossed_above = True
+                    crossed_below = False
+                    temp_list.append('9maCrossedAbove50ma')
+                else:
+                    temp_list.append('9maAbove50ma')
+            else:
+                if crossed_below == False:
+                    crossed_below = True
+                    crossed_above = False
+                    temp_list.append('9maCrossedBelow50ma')
+                else:
+                    temp_list.append('9maBelow50ma')
+
+        self._frame["sma9_crossed_sma50"] = pd.Series(temp_list).values
+
+        # calculate colum for 9 mov cross to 50 mov
+
+        # self._frame['sma9_crossed_sma50'] = np.where(self._frame["sma_9"] > self._frame["sma_50"], '9maAbove50ma', "9maBelow50ma")
+
+        return self._frame
+
+    def abs_9_minus_50_slope(self, column_name: str = 'abs_9_minus_50_slope'):
+        locals_data = locals()
+        del locals_data['self']
+
+        self._current_indicators[column_name] = {}
+        self._current_indicators[column_name]['args'] = locals_data
+        self._current_indicators[column_name]['func'] = self.abs_9_minus_50_slope
+
+        # grab sma_9 and sma_50
+        sma_9 = self._frame["sma_9"]
+        sma_50 = self._frame["sma_50"]
+
+        # calculate abs_diff
+        temp_sma_9_minus_50 = []
+        for val_9, val_50 in zip(sma_9, sma_50):
+            if math.isnan(val_9) or math.isnan(val_50):
+                temp_sma_9_minus_50.append(0)
+            else:
+                temp_sma_9_minus_50.append(round(abs(val_9 - val_50) * 0.0174533 * 1000, 4)) # do these dudes know basic math what
+
+        self._frame[column_name] = pd.Series(temp_sma_9_minus_50).values
+
+        return self._frame
+
+    def max_option_chain(self, symbol):
+        """Returns near the money (NTM) options on the call and put side that are highest volume.
+
+          Arguments:
+          ----
+
+          Returns:
+          ----
+
+          Usage:
+          ----
+              >>> historical_prices_df = trading_robot.grab_historical_prices(
+                  start=start_date,
+                  end=end_date,
+                  bar_size=1,
+                  bar_type='minute'
+              )
+              >>> price_data_frame = pd.DataFrame(data=historical_prices)
+              >>> indicator_client = Indicators(price_data_frame=price_data_frame)
+              >>> indicator_client.sma(period=100)
+          """
+
+        locals_data = locals()
+        del locals_data['self']
+
+        self._current_indicators['calls_option'] = {}
+        self._current_indicators['calls_option']['args'] = locals_data
+        self._current_indicators['calls_option']['func'] = self.max_option_chain
+
+        params = {
+            "symbol": symbol,
+            "range": "NTM"
+        }
+
+        watchlist_info = self.session.get_options_chain(option_chain=params)
+
+        options_list_calls = []
+        options_list_calls_total_volume = []
+        temp_symbol_list = []
+
+        # Level One - Option. .WMT210312C131 to convert it WMT_031221C131
+        # Loop through the watchlist_info (which is actually the options chain information) and create a temp dictionary
+        for call_key, call_value in watchlist_info.get("callExpDateMap", {}).items():
+            for candle_key, candle_value in watchlist_info.get("callExpDateMap", {}).get(call_key).items():
+                temp_d = {
+                    "symbol": watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+                        "symbol"),
+                    "total_volume": watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+                        "totalVolume"),
+                    "percent_change":
+                        watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+                            "percentChange")
+                }
+                options_list_calls.append(temp_d)
+
+        # Get the calls with max volume
+        max_volume_calls_index = max(range(len(options_list_calls)),
+                                     key=lambda index: options_list_calls[index]['total_volume'])
+
+        # Reformat the options
+        symbol_new_format = options_list_calls[max_volume_calls_index].get("symbol")
+        symbol_new_format_list = symbol_new_format.split('_')
+        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + \
+                            symbol_new_format_list[1][0:2] + symbol_new_format_list[1][2:4] + \
+                            symbol_new_format_list[1][6:]
+
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(options_list_calls[max_volume_calls_index].get("symbol"))
+        self._frame['calls_option'] = pd.Series(temp_symbol_list).values
+        self.calls_options = temp_symbol_list
+
+        temp_symbol_list = []
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(symbol_new_format)
+        self._frame['calls_option_format'] = pd.Series(temp_symbol_list).values
+
+        temp_symbol_list = []
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(options_list_calls[max_volume_calls_index].get("percent_change"))
+        self._frame['percent_change_calls'] = pd.Series(temp_symbol_list).values
+
+        temp_symbol_list = []
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(options_list_calls[max_volume_calls_index].get("total_volume"))
+        self._frame['total_volume_calls'] = pd.Series(temp_symbol_list).values
+
+        # make put columns
+        options_list_puts = []
+        options_list_puts_total_volume = []
+        for call_key, call_value in watchlist_info.get("putExpDateMap", {}).items():
+            for candle_key, candle_value in watchlist_info.get("putExpDateMap", {}).get(call_key).items():
+                temp_d = {
+                    "symbol": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+                        "symbol"),
+                    "total_volume": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+                        "totalVolume"),
+                    "percent_change": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[
+                        0].get(
+                        "percentChange"),
+                }
+                options_list_puts.append(temp_d)
+                options_list_puts_total_volume.append(
+                    watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get("totalVolume"))
+
+        max_volume_puts_index = max(range(len(options_list_puts)),
+                                    key=lambda index: options_list_puts[index]['total_volume'])
+        symbol_new_format = options_list_puts[max_volume_puts_index].get("symbol")
+        symbol_new_format_list = symbol_new_format.split('_')
+        symbol_new_format = '.' + symbol_new_format_list[0] + symbol_new_format_list[1][4:6] + \
+                            symbol_new_format_list[1][0:2] + symbol_new_format_list[1][2:4] + \
+                            symbol_new_format_list[1][6:]
+
+        temp_symbol_list = []
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(options_list_puts[max_volume_puts_index].get("symbol"))
+        self._frame['puts_option'] = pd.Series(temp_symbol_list).values
+        self.puts_options = temp_symbol_list
+
+        temp_symbol_list = []
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(symbol_new_format)
+        self._frame['puts_option_format'] = pd.Series(temp_symbol_list).values
+
+        temp_symbol_list = []
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(options_list_puts[max_volume_puts_index].get("percent_change"))
+        self._frame['percent_change_puts'] = pd.Series(temp_symbol_list).values
+
+        temp_symbol_list = []
+        for i in range(len(self._frame)):
+            temp_symbol_list.append(options_list_puts[max_volume_puts_index].get("total_volume"))
+        self._frame['total_volume_puts'] = pd.Series(temp_symbol_list).values
+
+        return self._frame
+
     def rsi(self, period: int, method: str = 'wilders', column_name: str = 'rsi') -> pd.DataFrame:
         """Calculates the Relative Strength Index (RSI).
 
@@ -319,15 +556,110 @@ class Indicators():
         locals_data = locals()
         del locals_data['self']
 
-        self._current_indicators[column_name] = {}
-        self._current_indicators[column_name]['args'] = locals_data
-        self._current_indicators[column_name]['func'] = self.sma
+        self._current_indicators[column_name + '_' + str(period)] = {}
+        self._current_indicators[column_name + '_' + str(period)]['args'] = locals_data
+        self._current_indicators[column_name + '_' + str(period)]['func'] = self.sma
 
+        # print(self.price_data_frame)
         # Add the SMA
-        self._frame[column_name] = self._price_groups['close'].transform(
+        self._frame[column_name + '_' + str(period)] = self._price_groups['close'].transform(
             lambda x: x.rolling(window=period).mean()
         )
 
+        # nikhil modified
+        # adding logic for sma 9 slope
+        index_count = 1
+        prev = 0
+        next = 0
+        temp_list = []
+        for index, row in self._frame.iterrows():
+
+            if index_count == 1:
+                prev = next = row[column_name + '_' + str(period)]
+                temp_list.append(0)
+
+            else:
+                prev = next
+                next = row[column_name + '_' + str(period)]
+
+                if math.isnan(prev) or math.isnan(next):
+                    temp_list.append(0)
+                else:
+                    temp_list.append(round(((next - prev) * 0.0174533) * 10000, 4))
+
+            # print(prev, next)
+            index_count += 1
+        self._frame[column_name + '_' + str(period) + '_slope'] = pd.Series(temp_list).values
+        # print(row[column_name])
+
+        # print(self._frame)
+        return self._frame
+
+    def volume_avg(self, period: int, column_name: str = 'volume_avg') -> pd.DataFrame:
+        """Calculates the Simple Moving Average (SMA).
+
+        Arguments:
+        ----
+        period {int} -- The number of periods to use when calculating the SMA.
+
+        Returns:
+        ----
+        {pd.DataFrame} -- A Pandas data frame with the SMA indicator included.
+
+        Usage:
+        ----
+            >>> historical_prices_df = trading_robot.grab_historical_prices(
+                start=start_date,
+                end=end_date,
+                bar_size=1,
+                bar_type='minute'
+            )
+            >>> price_data_frame = pd.DataFrame(data=historical_prices)
+            >>> indicator_client = Indicators(price_data_frame=price_data_frame)
+            >>> indicator_client.sma(period=100)
+        """
+
+        locals_data = locals()
+        del locals_data['self']
+
+        self._current_indicators[column_name + '_' + str(period)] = {}
+        self._current_indicators[column_name + '_' + str(period)]['args'] = locals_data
+        self._current_indicators[column_name + '_' + str(period)]['func'] = self.volume_avg
+
+        # print(self.price_data_frame)
+        # Add the SMA
+        self._frame[column_name + '_' + str(period)] = self._price_groups['volume'].transform(
+            lambda x: x.rolling(window=period).mean()
+        )
+
+        # nikhil modified
+        # adding logic for sma 9 slope
+        index_count = 1
+        prev = 0
+        next = 0
+        temp_list = []
+        for index, row in self._frame.iterrows():
+
+            if index_count == 1:
+                prev = next = row[column_name + '_' + str(period)]
+                temp_list.append(0)
+
+            else:
+                prev = next
+                next = row[column_name + '_' + str(period)]
+
+                if math.isnan(prev) or math.isnan(next):
+                    temp_list.append(0)
+                else:
+                    temp_list.append(round(((next - prev) * 0.00174533), 4))
+
+            # print(prev, next)
+            index_count += 1
+
+        self._frame[column_name + '_' + str(period) + '_slope'] = pd.Series(temp_list).values
+        # print(row[column_name])
+
+        # print(self._frame)
         return self._frame
 
     def ema(self, period: int, alpha: float = 0.0, column_name = 'ema') -> pd.DataFrame:

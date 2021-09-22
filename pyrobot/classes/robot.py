@@ -14,6 +14,7 @@ from typing import Union
 from pyrobot.classes.trades import Trade
 from pyrobot.classes.portfolio import Portfolio
 from pyrobot.classes.stock_frame import StockFrame
+from pyrobot.classes.indicators import Indicators
 
 from td.client import TDClient
 from td.utils import TDUtilities
@@ -24,7 +25,7 @@ milliseconds_since_epoch = TDUtilities().milliseconds_since_epoch
 
 class PyRobot():
 
-    def __init__(self, client_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, trading_account: str = None) -> None:
+    def __init__(self, client_id: str, account_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, trading_account: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
 
         Arguments:
@@ -46,17 +47,29 @@ class PyRobot():
 
         # Set the attirbutes
         self.trading_account = trading_account
+        self.account_id = account_id
         self.client_id = client_id
         self.redirect_uri = redirect_uri
         self.credentials_path = credentials_path
-        self.session: TDClient = self._create_session()
         self.trades = {}
         self.historical_prices = {}
-        self.stock_frame: StockFrame = None
         self.paper_trading = paper_trading
+
+        # Classes
+        self.session: TDClient = self._create_session()
+        self.stock_frame: StockFrame = None
+        self.portfolio: Portfolio = None
+        self.indicator: Indicators = None
+
 
         self._bar_size = None
         self._bar_type = None
+
+        print("="*80)
+        print("Session initialized")
+        print("Trading with account {}".format(account_id))
+        print("="*80)
+
 
     def _create_session(self) -> TDClient:
         """Start a new session.
@@ -81,6 +94,52 @@ class PyRobot():
         td_client.login()
 
         return td_client
+
+    def create_portfolio(self) -> Portfolio:
+        """Create a new portfolio.
+
+        Creates a Portfolio Object to help store and organize positions
+        as they are added and removed during trading.
+
+        Usage:
+        ----
+            >>> trading_robot = PyRobot(
+            client_id=CLIENT_ID,
+            redirect_uri=REDIRECT_URI,
+            credentials_path=CREDENTIALS_PATH
+            )
+            >>> portfolio = trading_robot.create_portfolio()
+            >>> portfolio
+            <pyrobot.portfolio.Portfolio object at 0x0392BF88>
+
+        Returns:
+        ----
+        Portfolio -- A pyrobot.Portfolio object with no positions.
+        """
+
+        # Initalize the portfolio.
+        self.portfolio = Portfolio(account_number=self.account_id)
+
+        # Assign the Client
+        self.portfolio.td_client = self.session
+
+        return self.portfolio
+
+    def create_indicator_client(self) -> Indicators:
+        """Create a new indicator client.
+
+        Returns:
+        ----
+        Indicator -- A pyrobot.Indicator object with no indicators.
+        """
+
+        self.indicator = Indicators(price_data_frame=self.stock_frame)
+        print("Indicator client created...")
+
+        # Assign the Client
+        self.indicator.session = self.session
+
+        return self.indicator
 
     @property
     def pre_market_open(self) -> bool:
@@ -210,36 +269,6 @@ class PyRobot():
             return True
         else:
             return False
-
-    def create_portfolio(self) -> Portfolio:
-        """Create a new portfolio.
-
-        Creates a Portfolio Object to help store and organize positions
-        as they are added and removed during trading.
-
-        Usage:
-        ----
-            >>> trading_robot = PyRobot(
-            client_id=CLIENT_ID,
-            redirect_uri=REDIRECT_URI,
-            credentials_path=CREDENTIALS_PATH
-            )
-            >>> portfolio = trading_robot.create_portfolio()
-            >>> portfolio
-            <pyrobot.portfolio.Portfolio object at 0x0392BF88>
-
-        Returns:
-        ----
-        Portfolio -- A pyrobot.Portfolio object with no positions.
-        """
-
-        # Initalize the portfolio.
-        self.portfolio = Portfolio(account_number=self.trading_account)
-
-        # Assign the Client
-        self.portfolio.td_client = self.session
-
-        return self.portfolio
 
     def create_trade(self, trade_id: str, enter_or_exit: str, long_or_short: str, order_type: str = 'mkt', price: float = 0.0, stop_limit_price=0.0) -> Trade:
         """Initalizes a new instance of a Trade Object.
@@ -874,72 +903,72 @@ class PyRobot():
 
         return True
 
-    def get_accounts(self, account_number: str = None, all_accounts: bool = False) -> dict:
-        """Returns all the account balances for a specified account.
-
-        Keyword Arguments:
-        ----
-        account_number {str} -- The account number you want to query. (default: {None})
-
-        all_accounts {bool} -- Specifies whether you want to grab all accounts `True` or not
-            `False`. (default: {False})
-
-        Returns:
-        ----
-        Dict -- A dictionary containing all the information in your account.
-
-        Usage:
-        ----
-
-            >>> trading_robot = PyRobot(
-                client_id=CLIENT_ID,
-                redirect_uri=REDIRECT_URI,
-                credentials_path=CREDENTIALS_PATH
-            )
-            >>> trading_robot_accounts = trading_robot.session.get_accounts(
-                account_number="<YOUR ACCOUNT NUMBER>"
-            )
-            >>> trading_robot_accounts
-            [
-                {
-                    'account_number': 'ACCOUNT_ID',
-                    'account_type': 'CASH',
-                    'available_funds': 0.0,
-                    'buying_power': 0.0,
-                    'cash_available_for_trading': 0.0,
-                    'cash_available_for_withdrawl': 0.0,
-                    'cash_balance': 0.0,
-                    'day_trading_buying_power': 0.0,
-                    'long_market_value': 0.0,
-                    'maintenance_call': 0.0,
-                    'maintenance_requirement': 0.0,
-                    'short_balance': 0.0,
-                    'short_margin_value': 0.0,
-                    'short_market_value': 0.0
-                }
-            ]
-        """
-
-        # Depending on how the client was initalized, either use the state account
-        # or the one passed through the function.
-        if all_accounts:
-            account = 'all'
-        elif self.trading_account:
-            account = self.trading_account
-        else:
-            account = account_number
-
-        # Grab the accounts.
-        accounts = self.session.get_accounts(
-            account=account
-        )
-
-        # Parse the account info.
-        accounts_parsed = self._parse_account_balances(
-            accounts_response=accounts
-        )
-
-        return accounts_parsed
+    # def get_accounts(self, account_number: str = None, all_accounts: bool = False) -> dict:
+    #     """Returns all the account balances for a specified account.
+    #
+    #     Keyword Arguments:
+    #     ----
+    #     account_number {str} -- The account number you want to query. (default: {None})
+    #
+    #     all_accounts {bool} -- Specifies whether you want to grab all accounts `True` or not
+    #         `False`. (default: {False})
+    #
+    #     Returns:
+    #     ----
+    #     Dict -- A dictionary containing all the information in your account.
+    #
+    #     Usage:
+    #     ----
+    #
+    #         >>> trading_robot = PyRobot(
+    #             client_id=CLIENT_ID,
+    #             redirect_uri=REDIRECT_URI,
+    #             credentials_path=CREDENTIALS_PATH
+    #         )
+    #         >>> trading_robot_accounts = trading_robot.session.get_accounts(
+    #             account_number="<YOUR ACCOUNT NUMBER>"
+    #         )
+    #         >>> trading_robot_accounts
+    #         [
+    #             {
+    #                 'account_number': 'ACCOUNT_ID',
+    #                 'account_type': 'CASH',
+    #                 'available_funds': 0.0,
+    #                 'buying_power': 0.0,
+    #                 'cash_available_for_trading': 0.0,
+    #                 'cash_available_for_withdrawl': 0.0,
+    #                 'cash_balance': 0.0,
+    #                 'day_trading_buying_power': 0.0,
+    #                 'long_market_value': 0.0,
+    #                 'maintenance_call': 0.0,
+    #                 'maintenance_requirement': 0.0,
+    #                 'short_balance': 0.0,
+    #                 'short_margin_value': 0.0,
+    #                 'short_market_value': 0.0
+    #             }
+    #         ]
+    #     """
+    #
+    #     # Depending on how the client was initalized, either use the state account
+    #     # or the one passed through the function.
+    #     if all_accounts:
+    #         account = 'all'
+    #     elif self.trading_account:
+    #         account = self.trading_account
+    #     else:
+    #         account = account_number
+    #
+    #     # Grab the accounts.
+    #     accounts = self.session.get_accounts(
+    #         account=account
+    #     )
+    #
+    #     # Parse the account info.
+    #     accounts_parsed = self._parse_account_balances(
+    #         accounts_response=accounts
+    #     )
+    #
+    #     return accounts_parsed
 
     def _parse_account_balances(self, accounts_response: Union[Dict, List]) -> List[Dict]:
         """Parses an Account response into a more simplified dictionary.
@@ -1061,6 +1090,33 @@ class PyRobot():
                     account_lists.append(account_dict)
 
         return account_lists
+
+    def get_current_positions(self):
+        account_infos = self.session.get_accounts(fields=['orders', 'positions'])
+
+        for account_info in account_infos:
+            account = account_info['securitiesAccount']
+            account_id = account['accountId']
+
+            if account_id == self.account_id:
+                if 'positions' in account:
+                    positions = account['positions']
+
+                    for position in positions:
+                        instrument = position['instrument']
+                        average_price = position['averagePrice']
+                        quantity = position['longQuantity']
+                        asset_type = instrument['assetType']
+                        position_symbol = instrument['symbol']
+
+                        self.portfolio.add_position(symbol=position_symbol,
+                                               asset_type=asset_type,
+                                               quantity=quantity,
+                                               purchase_price=average_price)
+
+                else:
+                    print('Not currently holding any positions.')
+
 
     def get_positions(self, account_number: str = None, all_accounts: bool = False) -> List[Dict]:
         """Gets all the positions for a specified account number.
