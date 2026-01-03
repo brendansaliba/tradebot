@@ -1,0 +1,1 @@
+How to do that authentication shit: https://developer.tdameritrade.com/content/simple-auth-local-apps
