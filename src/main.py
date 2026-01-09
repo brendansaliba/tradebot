@@ -40,6 +40,9 @@ bot = Robot(
     credentials_path=None,
 )
 
+bot.client.get_schwab_equity_session_hours()
+bot.client.get_accounts()
+
 # Grab historical prices, first define the start date and end date.
 # end = datetime.today()
 # start = end - timedelta(days=10)

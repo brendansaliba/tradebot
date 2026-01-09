@@ -1,0 +1,131 @@
+[
+  {
+    "securitiesAccount": {
+      "type": "CASH",
+      "accountNumber": "account_number",
+      "roundTrips": 0,
+      "isDayTrader": false,
+      "isClosingOnlyRestricted": false,
+      "pfcbFlag": false,
+      "positions": [
+        {
+          "shortQuantity": 0.0,
+          "averagePrice": 423.24675,
+          "currentDayProfitLoss": 1528.0,
+          "currentDayProfitLossPercentage": 2.19,
+          "longQuantity": 160.0,
+          "settledLongQuantity": 160.0,
+          "settledShortQuantity": 0.0,
+          "instrument": {
+            "assetType": "EQUITY",
+            "cusip": "88160R101",
+            "symbol": "TSLA",
+            "netChange": 9.55
+          },
+          "marketValue": 71256.0,
+          "maintenanceRequirement": 0.0,
+          "averageLongPrice": 423.2467125,
+          "taxLotAverageLongPrice": 423.24675,
+          "longOpenProfitLoss": 3536.52,
+          "previousSessionLongQuantity": 160.0,
+          "currentDayCost": 0.0
+        },
+        {
+          "shortQuantity": 0.0,
+          "averagePrice": 179.399428571429,
+          "currentDayProfitLoss": 128.099999999999,
+          "currentDayProfitLossPercentage": 0.49,
+          "longQuantity": 140.0,
+          "settledLongQuantity": 140.0,
+          "settledShortQuantity": 0.0,
+          "instrument": {
+            "assetType": "EQUITY",
+            "cusip": "67066G104",
+            "symbol": "NVDA",
+            "netChange": 0.915
+          },
+          "marketValue": 26033.7,
+          "maintenanceRequirement": 0.0,
+          "averageLongPrice": 179.399414285714,
+          "taxLotAverageLongPrice": 179.399428571429,
+          "longOpenProfitLoss": 917.77999999994,
+          "previousSessionLongQuantity": 140.0,
+          "currentDayCost": 0.0
+        },
+        {
+          "shortQuantity": 0.0,
+          "averagePrice": 459.9466666667,
+          "currentDayProfitLoss": 104.1,
+          "currentDayProfitLossPercentage": 1.12,
+          "longQuantity": 15.0,
+          "settledLongQuantity": 15.0,
+          "settledShortQuantity": 0.0,
+          "instrument": {
+            "assetType": "COLLECTIVE_INVESTMENT",
+            "cusip": "46090E103",
+            "symbol": "QQQ",
+            "description": "INVESCO QQQ TR",
+            "type": "EXCHANGE_TRADED_FUND"
+          },
+          "marketValue": 9411.15,
+          "maintenanceRequirement": 0.0,
+          "averageLongPrice": 459.946666666667,
+          "taxLotAverageLongPrice": 459.9466666667,
+          "longOpenProfitLoss": 2511.949999999499,
+          "previousSessionLongQuantity": 15.0,
+          "currentDayCost": 0.0
+        }
+      ],
+      "initialBalances": {
+        "accruedInterest": 0.0,
+        "cashAvailableForTrading": 34013.86,
+        "cashAvailableForWithdrawal": 34013.86,
+        "cashBalance": 34013.86,
+        "bondValue": 0.0,
+        "cashReceipts": 0.0,
+        "liquidationValue": 138954.51,
+        "longOptionMarketValue": 0.0,
+        "longStockValue": 104940.65,
+        "moneyMarketFund": 0.0,
+        "mutualFundValue": 34013.86,
+        "shortOptionMarketValue": 0.0,
+        "shortStockValue": 0.0,
+        "isInCall": false,
+        "unsettledCash": 0.0,
+        "cashDebitCallValue": 0.0,
+        "pendingDeposits": 0.0,
+        "accountValue": 138954.51
+      },
+      "currentBalances": {
+        "accruedInterest": 0.0,
+        "cashBalance": 34013.86,
+        "cashReceipts": 0.0,
+        "longOptionMarketValue": 0.0,
+        "liquidationValue": 140714.71,
+        "longMarketValue": 106700.85,
+        "moneyMarketFund": 0.0,
+        "savings": 0.0,
+        "shortMarketValue": 0.0,
+        "pendingDeposits": 0.0,
+        "mutualFundValue": 0.0,
+        "bondValue": 0.0,
+        "shortOptionMarketValue": 0.0,
+        "cashAvailableForTrading": 34013.86,
+        "cashAvailableForWithdrawal": 34013.86,
+        "cashCall": 0.0,
+        "longNonMarginableMarketValue": 34013.86,
+        "totalCash": 34013.86,
+        "cashDebitCallValue": 0.0,
+        "unsettledCash": 0.0
+      },
+      "projectedBalances": {
+        "cashAvailableForTrading": 34013.86,
+        "cashAvailableForWithdrawal": 34013.86
+      }
+    },
+    "aggregatedBalance": {
+      "currentLiquidationValue": 140714.71,
+      "liquidationValue": 140714.71
+    }
+  }
+]
