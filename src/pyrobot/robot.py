@@ -15,17 +15,15 @@ from pyrobot.trade import Trade
 from pyrobot.portfolio import Portfolio
 from pyrobot.stock_frame import StockFrame
 from pyrobot.indicators import Indicators
-
-# Old stuff from TD Ameritrade. Change to general broker account class or Schwab
-# from td.client import TDClient
-# from td.utils import TDUtilities
+from pyrobot.client.schwab_client import SchwabClient
+from pyrobot.client.utils import milliseconds_since_epoch
 
 # Timing
-# milliseconds_since_epoch = TDUtilities().milliseconds_since_epoch
+milliseconds_since_epoch = milliseconds_since_epoch()
 
 class Robot():
 
-    def __init__(self, client_id: str, account_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, trading_account: str = None) -> None:
+    def __init__(self, app_key: str = None, app_secret: str = None, refresh_token: str = None, redirect_uri: str = "https://172.0.0.1", paper_trading: bool = True, credentials_path: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
 
         Arguments:
@@ -34,7 +32,7 @@ class Robot():
             This can be found at the app registration portal.
 
         redirect_uri {str} -- This is the redirect URL that you specified when you created your
-            TD Ameritrade Application.
+            Schwab Application.
 
         Keyword Arguments:
         ----
@@ -45,55 +43,24 @@ class Robot():
 
         """
 
-        # Set the attirbutes
-        self.trading_account = trading_account
-        self.account_id = account_id
-        self.client_id = client_id
-        self.redirect_uri = redirect_uri
+        self.client = SchwabClient(app_key=app_key, app_secret=app_secret, refresh_token=refresh_token, redirect_uri=redirect_uri)
+        self.trading_account = self.client.account_number
         self.credentials_path = credentials_path
         self.trades = {}
         self.historical_prices = {}
         self.paper_trading = paper_trading
 
         # Classes
-        ## CREATE BROKER OBJ HERE (SCHWAB OR WHATEVER)
         self.stock_frame: StockFrame = None
         self.portfolio: Portfolio = None
         self.indicator: Indicators = None
-
 
         self._bar_size = None
         self._bar_type = None
 
         print("="*80)
-        print("Session initialized")
-        print("Trading with account {}".format(account_id))
+        print("Trading with account {}".format(self.trading_account))
         print("="*80)
-
-
-    def _create_session(self) -> None:
-        """Start a new session.
-
-        Creates a new session with the TD Ameritrade API and logs the user into
-        the new session.
-
-        Returns:
-        ----
-        TDClient -- A TDClient object with an authenticated sessions.
-
-        """
-
-        # Create a new instance of the client
-        # td_client = TDClient(
-        #     client_id=self.client_id,
-        #     redirect_uri=self.redirect_uri,
-        #     credentials_path=self.credentials_path
-        # )
-
-        # log the client into the new session
-        # td_client.login()
-
-        return None
 
     def create_portfolio(self) -> Portfolio:
         """Create a new portfolio.

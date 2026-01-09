@@ -8,6 +8,7 @@
 import pprint
 import operator
 import os
+from dotenv import load_dotenv
 
 from datetime import datetime
 from datetime import timedelta
@@ -18,29 +19,30 @@ from pyrobot.indicators import Indicators
 
 from functions_dev import get_current_positions
 
-# Grab configuration values.
-dirname = os.path.dirname(__file__)
-config_path = os.path.join(dirname, 'config/config.ini')
-config = ConfigParser()
-config.read(config_path)
+load_dotenv()
 
-SYMBOL = config.get('main', 'symbol')
-# CLIENT_ID = config.get('main', 'CLIENT_ID')
-# ACCOUNT_ID = config.get('main', 'ACCOUNT_ID')
-# REDIRECT_URI = config.get('main', 'REDIRECT_URI')
-# CREDENTIALS_PATH = config.get('main', 'CREDENTIALS_PATH_WIN')
-# ACCOUNT_NUMBER = config.get('main', 'ACCOUNT_ID')
+# Grab configuration values.
+# dirname = os.path.dirname(__file__)
+# config_path = os.path.join(dirname, 'config/config.ini')
+# config = ConfigParser()
+# config.read(config_path)
+
+# SYMBOL = config.get('main', 'symbol')
+
+app_key = os.getenv("SCHWAB_APP_KEY")
+app_secret = os.getenv("SCHWAB_APP_SECRET")
+refresh_token = os.getenv("REFRESH_TOKEN")
 
 bot = Robot(
-    client_id=None,
-    account_id=None,
-    redirect_uri=None,
+    app_key=app_key,
+    app_secret=app_secret,
+    refresh_token=refresh_token,
     credentials_path=None,
 )
 
 # Grab historical prices, first define the start date and end date.
-end = datetime.today()
-start = end - timedelta(days=10)
+# end = datetime.today()
+# start = end - timedelta(days=10)
 
 # Grab the historical prices.
 # historical_prices = bot.grab_historical_prices(
@@ -58,11 +60,11 @@ start = end - timedelta(days=10)
 
 
 # We can also add the stock frame to the Portfolio object.
-bot.create_portfolio()
+# bot.create_portfolio()
 # bot.portfolio.stock_frame = stock_frame
 # bot.portfolio.historical_prices = historical_prices
 # bot.get_current_positions()
-bot.create_indicator_client()
+# bot.create_indicator_client()
 
 # Add indicators
 # bot.indicator.percent_change()
@@ -78,24 +80,24 @@ bot.create_indicator_client()
 
 
 # Define initial refresh time so we know when to refresh the TDClient
-refresh_time = datetime.now() + timedelta(minutes=21)
+# refresh_time = datetime.now() + timedelta(minutes=21)
 
-while True:
+# while True:
     # Update token after 21 minutes
-    if datetime.now() > refresh_time:
-        bot.session.login()
-        print('refresh')
-        refresh_time = datetime.now() + timedelta(minutes=21)
+    # if datetime.now() > refresh_time:
+    #     bot.session.login()
+    #     print('refresh')
+    #     refresh_time = datetime.now() + timedelta(minutes=21)
 
     # Grab the latest bar.
-    latest_bars = bot.get_latest_bar()
+    # latest_bars = bot.get_latest_bar()
 
     # Add to the Stock Frame.
     # stock_frame.add_rows(data=latest_bars)
     # bot.stock_frame = stock_frame
 
     # Refresh the Indicators.
-    bot.indicator.refresh()
+    # bot.indicator.refresh()
 
     # print("="*50)
     # print("Current StockFrame")
@@ -108,7 +110,7 @@ while True:
     # signals = indicator_client.check_signals()
 
     # Grab the last bar.
-    last_bar_timestamp = bot.stock_frame.frame.tail(n=1).index.get_level_values(1)
+    # last_bar_timestamp = bot.stock_frame.frame.tail(n=1).index.get_level_values(1)
 
     # Wait till the next bar.
-    bot.wait_till_next_bar(last_bar_timestamp=last_bar_timestamp)
+    # bot.wait_till_next_bar(last_bar_timestamp=last_bar_timestamp)
