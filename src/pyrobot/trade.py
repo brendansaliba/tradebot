@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 from typing import Dict
 
-from td.client import TDClient
+# from td.client import TDClient
 
 
 class Trade():
@@ -11,7 +11,7 @@ class Trade():
     """
     Object Type:
     ----
-    `pyrobot.Trade`
+    `pyrobot.trade`
 
     Overview:
     ----
@@ -37,7 +37,7 @@ class Trade():
         self._triggered_added = False
         self._multi_leg = False
         self._one_cancels_other = False
-        self._td_client: TDClient = None
+        # self._td_client: TDClient = None
     
     def to_dict(self) -> dict:
 
@@ -501,7 +501,7 @@ class Trade():
 
         return new_price
     
-    def grab_price(self) -> float:
+    def grab_price(self) -> None:
         """Grabs the current price of the order.
 
         Returns
@@ -511,24 +511,24 @@ class Trade():
         """        
 
         # We need to basis to calculate off of. Use the price.
-        if self.order_type == 'mkt':
+        # if self.order_type == 'mkt':
 
-            quote = self._td_client.get_quotes(instruments=[self.symbol])
+        #     quote = self._td_client.get_quotes(instruments=[self.symbol])
 
-            # Have to make a call to Get Quotes.
-            price = quote[self.symbol]['lastPrice']
+        #     # Have to make a call to Get Quotes.
+        #     price = quote[self.symbol]['lastPrice']
 
-        elif self.order_type == 'lmt':
-            price = self.price
+        # elif self.order_type == 'lmt':
+        #     price = self.price
         
-        else:
+        # else:
 
-            quote = self._td_client.get_quotes(instruments=[self.symbol])
+        #     quote = self._td_client.get_quotes(instruments=[self.symbol])
 
-            # Have to make a call to Get Quotes.
-            price = quote[self.symbol]['lastPrice']
+        #     # Have to make a call to Get Quotes.
+        #     price = quote[self.symbol]['lastPrice']
         
-        return round(price, 2)
+        return None
 
     def add_take_profit(self, profit_size: float, percentage: bool = False) -> bool:
         """Add's a Limit Order to exit a trade when a profit threshold is reached.
@@ -881,15 +881,15 @@ class Trade():
     def _update_order_status(self) -> None:
         """Updates the current order status, to reflect what's on TD."""        
 
-        if self.order_id != "":
+        # if self.order_id != "":
 
-            order_response = self._td_client.get_orders(
-                account=self.account,
-                order_id=self.order_id
-            )
+        #     order_response = self._td_client.get_orders(
+        #         account=self.account,
+        #         order_id=self.order_id
+        #     )
 
-            self.order_response = order_response
-            self.order_status = self.order_response['status']
+        #     self.order_response = order_response
+        #     self.order_status = self.order_response['status']
     
     def check_status(self) -> object:
         """Used to easily identify the order status.
@@ -901,26 +901,26 @@ class Trade():
             properties to grab the order status.
         """
 
-        from pyrobot.classes.order_status import OrderStatus
+        from pyrobot.order_status import OrderStatus
 
         return OrderStatus(trade_obj=self)
 
     def update_children(self) -> None:
         """Updates the Price info of the children info."""        
 
-        # Grab the children.
-        children = self.order['childOrderStrategies'][0]['childOrderStrategies']
+        # # Grab the children.
+        # children = self.order['childOrderStrategies'][0]['childOrderStrategies']
 
-        # Loop through each child.
-        for order in children:
+        # # Loop through each child.
+        # for order in children:
             
-            # Get the latest price.
-            quote = self._td_client.get_quotes(instruments=[self.symbol])
-            last_price = quote[self.symbol]['lastPrice']
+        #     # Get the latest price.
+        #     quote = self._td_client.get_quotes(instruments=[self.symbol])
+        #     last_price = quote[self.symbol]['lastPrice']
             
-            # Update the price.
-            if order['orderType'] == 'STOP':
-                order['stopPrice'] = round(order['stopPrice'] + last_price, 2)
-            elif order['orderType'] == 'LIMIT':
-                order['price'] = round(order['price'] + last_price, 2)
+        #     # Update the price.
+        #     if order['orderType'] == 'STOP':
+        #         order['stopPrice'] = round(order['stopPrice'] + last_price, 2)
+        #     elif order['orderType'] == 'LIMIT':
+        #         order['price'] = round(order['price'] + last_price, 2)
 

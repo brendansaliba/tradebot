@@ -2,7 +2,6 @@ from datetime import datetime
 from datetime import timedelta
 
 from functions import setup_func
-from cashflow.classes.indicators import Indicators_Isaac
 
 symbol = "NIO"
 trading_options = True

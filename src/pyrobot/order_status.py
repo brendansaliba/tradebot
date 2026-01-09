@@ -1,12 +1,11 @@
-from pyrobot.classes.trades import Trade
+from pyrobot.trade import Trade
 
 
 class OrderStatus():
 
-    def __init__(self, trade_obj: Trade) -> None:
-
-        self.trade_obj = trade_obj
-        self.order_status = self.trade_obj.order_status
+    def __init__(self, trade: Trade) -> None:
+        self.trade = trade
+        self.order_status = self.trade.order_status
 
     @property
     def is_cancelled(self, refresh_order_info: bool = True) -> bool:
@@ -27,7 +26,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'FILLED':
             return True
@@ -53,7 +52,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'REJECTED':
             return True
@@ -79,7 +78,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'EXPIRED':
             return True
@@ -105,7 +104,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'REPLACED':
             return True
@@ -131,7 +130,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'WORKING':
             return True
@@ -157,7 +156,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'PENDING_ACTIVATION':
             return True
@@ -183,7 +182,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'PENDING_CANCEL':
             return True
@@ -209,7 +208,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'PENDING_REPLACE':
             return True
@@ -235,7 +234,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'QUEUED':
             return True
@@ -261,7 +260,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'ACCEPTED':
             return True
@@ -288,7 +287,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'AWAITING_PARENT_ORDER':
             return True
@@ -315,7 +314,7 @@ class OrderStatus():
         """
 
         if refresh_order_info:
-            self.trade_obj._update_order_status()
+            self.trade._update_order_status()
 
         if self.order_status == 'AWAITING_CONDITION':
             return True

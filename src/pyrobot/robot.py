@@ -11,19 +11,19 @@ from typing import List
 from typing import Dict
 from typing import Union
 
-from pyrobot.classes.trades import Trade
-from pyrobot.classes.portfolio import Portfolio
-from pyrobot.classes.stock_frame import StockFrame
-from pyrobot.classes.indicators import Indicators
+from pyrobot.trade import Trade
+from pyrobot.portfolio import Portfolio
+from pyrobot.stock_frame import StockFrame
+from pyrobot.indicators import Indicators
 
-from td.client import TDClient
-from td.utils import TDUtilities
+# Old stuff from TD Ameritrade. Change to general broker account class or Schwab
+# from td.client import TDClient
+# from td.utils import TDUtilities
 
-# We are going to be doing some timestamp conversions.
-milliseconds_since_epoch = TDUtilities().milliseconds_since_epoch
+# Timing
+# milliseconds_since_epoch = TDUtilities().milliseconds_since_epoch
 
-
-class PyRobot():
+class Robot():
 
     def __init__(self, client_id: str, account_id: str, redirect_uri: str, paper_trading: bool = True, credentials_path: str = None, trading_account: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
@@ -56,7 +56,7 @@ class PyRobot():
         self.paper_trading = paper_trading
 
         # Classes
-        self.session: TDClient = self._create_session()
+        ## CREATE BROKER OBJ HERE (SCHWAB OR WHATEVER)
         self.stock_frame: StockFrame = None
         self.portfolio: Portfolio = None
         self.indicator: Indicators = None
@@ -71,7 +71,7 @@ class PyRobot():
         print("="*80)
 
 
-    def _create_session(self) -> TDClient:
+    def _create_session(self) -> None:
         """Start a new session.
 
         Creates a new session with the TD Ameritrade API and logs the user into
@@ -84,16 +84,16 @@ class PyRobot():
         """
 
         # Create a new instance of the client
-        td_client = TDClient(
-            client_id=self.client_id,
-            redirect_uri=self.redirect_uri,
-            credentials_path=self.credentials_path
-        )
+        # td_client = TDClient(
+        #     client_id=self.client_id,
+        #     redirect_uri=self.redirect_uri,
+        #     credentials_path=self.credentials_path
+        # )
 
         # log the client into the new session
-        td_client.login()
+        # td_client.login()
 
-        return td_client
+        return None
 
     def create_portfolio(self) -> Portfolio:
         """Create a new portfolio.
@@ -121,7 +121,7 @@ class PyRobot():
         self.portfolio = Portfolio(account_number=self.account_id)
 
         # Assign the Client
-        self.portfolio.td_client = self.session
+        # self.portfolio.td_client = self.session
 
         return self.portfolio
 
@@ -887,7 +887,7 @@ class PyRobot():
         # Define the file path.
         file_path = folder.joinpath('orders.json')
 
-        # First check if the file alread exists.
+        # First check if the file already exists.
         if file_path.exists():
             with open('data/orders.json', 'r') as order_json:
                 orders_list = json.load(order_json)

@@ -6,8 +6,8 @@ from typing import Any
 from typing import Dict
 from typing import Union
 
-from pyrobot.classes.stock_frame import StockFrame
-from td.client import TDClient
+from pyrobot.stock_frame import StockFrame
+# from td.client import TDClient
 
 
 class Indicators():
@@ -43,7 +43,7 @@ class Indicators():
         self._current_indicators = {}
         self._indicator_signals = {}
         self._frame = self._stock_frame.frame
-        self.session: TDClient = None
+        # self.session: TDClient = None
 
         self._indicators_comp_key = []
         self._indicators_key = []
@@ -350,7 +350,7 @@ class Indicators():
             "range": "NTM"
         }
 
-        watchlist_info = self.session.get_options_chain(option_chain=params)
+        # watchlist_info = self.session.get_options_chain(option_chain=params)
 
         options_list_calls = []
         options_list_calls_total_volume = []
@@ -358,18 +358,18 @@ class Indicators():
 
         # Level One - Option. .WMT210312C131 to convert it WMT_031221C131
         # Loop through the watchlist_info (which is actually the options chain information) and create a temp dictionary
-        for call_key, call_value in watchlist_info.get("callExpDateMap", {}).items():
-            for candle_key, candle_value in watchlist_info.get("callExpDateMap", {}).get(call_key).items():
-                temp_d = {
-                    "symbol": watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
-                        "symbol"),
-                    "total_volume": watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
-                        "totalVolume"),
-                    "percent_change":
-                        watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
-                            "percentChange")
-                }
-                options_list_calls.append(temp_d)
+        # for call_key, call_value in watchlist_info.get("callExpDateMap", {}).items():
+        #     for candle_key, candle_value in watchlist_info.get("callExpDateMap", {}).get(call_key).items():
+        #         temp_d = {
+        #             "symbol": watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+        #                 "symbol"),
+        #             "total_volume": watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+        #                 "totalVolume"),
+        #             "percent_change":
+        #                 watchlist_info.get("callExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+        #                     "percentChange")
+        #         }
+        #         options_list_calls.append(temp_d)
 
         # Get the calls with max volume
         max_volume_calls_index = max(range(len(options_list_calls)),
@@ -405,20 +405,20 @@ class Indicators():
         # make put columns
         options_list_puts = []
         options_list_puts_total_volume = []
-        for call_key, call_value in watchlist_info.get("putExpDateMap", {}).items():
-            for candle_key, candle_value in watchlist_info.get("putExpDateMap", {}).get(call_key).items():
-                temp_d = {
-                    "symbol": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
-                        "symbol"),
-                    "total_volume": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
-                        "totalVolume"),
-                    "percent_change": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[
-                        0].get(
-                        "percentChange"),
-                }
-                options_list_puts.append(temp_d)
-                options_list_puts_total_volume.append(
-                    watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get("totalVolume"))
+        # for call_key, call_value in watchlist_info.get("putExpDateMap", {}).items():
+        #     for candle_key, candle_value in watchlist_info.get("putExpDateMap", {}).get(call_key).items():
+        #         temp_d = {
+        #             "symbol": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+        #                 "symbol"),
+        #             "total_volume": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get(
+        #                 "totalVolume"),
+        #             "percent_change": watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[
+        #                 0].get(
+        #                 "percentChange"),
+        #         }
+        #         options_list_puts.append(temp_d)
+        #         options_list_puts_total_volume.append(
+        #             watchlist_info.get("putExpDateMap", {}).get(call_key).get(candle_key, [{}])[0].get("totalVolume"))
 
         max_volume_puts_index = max(range(len(options_list_puts)),
                                     key=lambda index: options_list_puts[index]['total_volume'])

@@ -6,13 +6,12 @@ from typing import Union
 
 from pandas.core.groupby import DataFrameGroupBy
 from pandas.core.window import RollingGroupby
-from pandas.core.window import Window
 
 
 class StockFrame():
 
     def __init__(self, data: List[Dict]) -> None:
-        """Initalizes the Stock Data Frame Object.
+        """Initalizes the Stock dataframe object.
 
         Arguments:
         ----
