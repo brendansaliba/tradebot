@@ -37,14 +37,13 @@ class Trade():
         self._triggered_added = False
         self._multi_leg = False
         self._one_cancels_other = False
-        # self._td_client: TDClient = None
     
     def to_dict(self) -> dict:
 
         # Initialize the Dict.
         obj_dict = {
-            "__class___": self.__class__.__name__,
-            "__module___": self.__module__
+            "__class__": self.__class__.__name__,
+            "__module__": self.__module__
         }
 
         # Add the Object.

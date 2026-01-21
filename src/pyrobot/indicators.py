@@ -7,7 +7,6 @@ from typing import Dict
 from typing import Union
 
 from pyrobot.stock_frame import StockFrame
-# from td.client import TDClient
 
 
 class Indicators():
@@ -43,7 +42,6 @@ class Indicators():
         self._current_indicators = {}
         self._indicator_signals = {}
         self._frame = self._stock_frame.frame
-        # self.session: TDClient = None
 
         self._indicators_comp_key = []
         self._indicators_key = []

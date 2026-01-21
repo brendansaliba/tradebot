@@ -17,8 +17,6 @@ from configparser import ConfigParser
 from pyrobot.robot import Robot
 from pyrobot.indicators import Indicators
 
-from functions_dev import get_current_positions
-
 load_dotenv()
 
 # Grab configuration values.
@@ -28,6 +26,10 @@ load_dotenv()
 # config.read(config_path)
 
 # SYMBOL = config.get('main', 'symbol')
+
+# Grab historical prices, first define the start date and end date.
+# end = datetime.today()
+# start = end - timedelta(days=10)
 
 app_key = os.getenv("SCHWAB_APP_KEY")
 app_secret = os.getenv("SCHWAB_APP_SECRET")
@@ -40,21 +42,15 @@ bot = Robot(
     credentials_path=None,
 )
 
-bot.client.get_schwab_equity_session_hours()
-bot.client.get_accounts()
 
-# Grab historical prices, first define the start date and end date.
-# end = datetime.today()
-# start = end - timedelta(days=10)
-
-# Grab the historical prices.
-# historical_prices = bot.grab_historical_prices(
-#     start=start,
-#     end=end,
-#     bar_size=1,
-#     bar_type='minute',
-#     symbols=[SYMBOL]
+# bot.client.get_historical_prices(
+#     symbol="TSLA",
+#     period_type="month",
+#     period=1,
+#     frequency_type="daily",
+#     frequency=1,
 # )
+
 
 # Convert data to a Data Frame.
 # stock_frame = bot.create_stock_frame(

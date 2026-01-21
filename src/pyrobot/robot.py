@@ -23,7 +23,7 @@ milliseconds_since_epoch = milliseconds_since_epoch()
 
 class Robot():
 
-    def __init__(self, app_key: str = None, app_secret: str = None, refresh_token: str = None, redirect_uri: str = "https://172.0.0.1", paper_trading: bool = True, credentials_path: str = None) -> None:
+    def __init__(self, app_key: str = None, app_secret: str = None, refresh_token: str = None, redirect_uri: str = "https://127.0.0.1", paper_trading: bool = True, credentials_path: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
 
         Arguments:
@@ -85,10 +85,7 @@ class Robot():
         """
 
         # Initalize the portfolio.
-        self.portfolio = Portfolio(account_number=self.account_id)
-
-        # Assign the Client
-        # self.portfolio.td_client = self.session
+        self.portfolio = Portfolio(account_number=self.client.account_number)
 
         return self.portfolio
 
@@ -102,9 +99,6 @@ class Robot():
 
         self.indicator = Indicators(price_data_frame=self.stock_frame)
         print("Indicator client created...")
-
-        # Assign the Client
-        self.indicator.session = self.session
 
         return self.indicator
 
@@ -741,72 +735,72 @@ class Robot():
 
         return True
 
-    # def get_accounts(self, account_number: str = None, all_accounts: bool = False) -> dict:
-    #     """Returns all the account balances for a specified account.
-    #
-    #     Keyword Arguments:
-    #     ----
-    #     account_number {str} -- The account number you want to query. (default: {None})
-    #
-    #     all_accounts {bool} -- Specifies whether you want to grab all accounts `True` or not
-    #         `False`. (default: {False})
-    #
-    #     Returns:
-    #     ----
-    #     Dict -- A dictionary containing all the information in your account.
-    #
-    #     Usage:
-    #     ----
-    #
-    #         >>> trading_robot = PyRobot(
-    #             client_id=CLIENT_ID,
-    #             redirect_uri=REDIRECT_URI,
-    #             credentials_path=CREDENTIALS_PATH
-    #         )
-    #         >>> trading_robot_accounts = trading_robot.session.get_accounts(
-    #             account_number="<YOUR ACCOUNT NUMBER>"
-    #         )
-    #         >>> trading_robot_accounts
-    #         [
-    #             {
-    #                 'account_number': 'ACCOUNT_ID',
-    #                 'account_type': 'CASH',
-    #                 'available_funds': 0.0,
-    #                 'buying_power': 0.0,
-    #                 'cash_available_for_trading': 0.0,
-    #                 'cash_available_for_withdrawl': 0.0,
-    #                 'cash_balance': 0.0,
-    #                 'day_trading_buying_power': 0.0,
-    #                 'long_market_value': 0.0,
-    #                 'maintenance_call': 0.0,
-    #                 'maintenance_requirement': 0.0,
-    #                 'short_balance': 0.0,
-    #                 'short_margin_value': 0.0,
-    #                 'short_market_value': 0.0
-    #             }
-    #         ]
-    #     """
-    #
+    def get_accounts(self, account_number: str = None, all_accounts: bool = False) -> dict:
+        """Returns all the account balances for a specified account.
+    
+        Keyword Arguments:
+        ----
+        account_number {str} -- The account number you want to query. (default: {None})
+    
+        all_accounts {bool} -- Specifies whether you want to grab all accounts `True` or not
+            `False`. (default: {False})
+    
+        Returns:
+        ----
+        Dict -- A dictionary containing all the information in your account.
+    
+        Usage:
+        ----
+    
+            >>> trading_robot = PyRobot(
+                client_id=CLIENT_ID,
+                redirect_uri=REDIRECT_URI,
+                credentials_path=CREDENTIALS_PATH
+            )
+            >>> trading_robot_accounts = trading_robot.session.get_accounts(
+                account_number="<YOUR ACCOUNT NUMBER>"
+            )
+            >>> trading_robot_accounts
+            [
+                {
+                    'account_number': 'ACCOUNT_ID',
+                    'account_type': 'CASH',
+                    'available_funds': 0.0,
+                    'buying_power': 0.0,
+                    'cash_available_for_trading': 0.0,
+                    'cash_available_for_withdrawl': 0.0,
+                    'cash_balance': 0.0,
+                    'day_trading_buying_power': 0.0,
+                    'long_market_value': 0.0,
+                    'maintenance_call': 0.0,
+                    'maintenance_requirement': 0.0,
+                    'short_balance': 0.0,
+                    'short_margin_value': 0.0,
+                    'short_market_value': 0.0
+                }
+            ]
+        """
+    
     #     # Depending on how the client was initalized, either use the state account
     #     # or the one passed through the function.
-    #     if all_accounts:
-    #         account = 'all'
-    #     elif self.trading_account:
-    #         account = self.trading_account
-    #     else:
-    #         account = account_number
-    #
-    #     # Grab the accounts.
-    #     accounts = self.session.get_accounts(
-    #         account=account
-    #     )
-    #
-    #     # Parse the account info.
-    #     accounts_parsed = self._parse_account_balances(
-    #         accounts_response=accounts
-    #     )
-    #
-    #     return accounts_parsed
+        if all_accounts:
+            account = 'all'
+        elif self.trading_account:
+            account = self.trading_account
+        else:
+            account = account_number
+    
+        # Grab the accounts.
+        accounts = self.session.get_accounts(
+            account=account
+        )
+    
+        # Parse the account info.
+        accounts_parsed = self._parse_account_balances(
+            accounts_response=accounts
+        )
+    
+        return accounts_parsed
 
     def _parse_account_balances(self, accounts_response: Union[Dict, List]) -> List[Dict]:
         """Parses an Account response into a more simplified dictionary.

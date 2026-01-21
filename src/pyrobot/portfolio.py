@@ -6,7 +6,6 @@ from typing import List
 from typing import Optional
 
 from pyrobot.stock_frame import StockFrame
-# from td.client import TDClient
 
 
 class Portfolio():
@@ -29,7 +28,6 @@ class Portfolio():
 
         self._historical_prices = []
 
-        # self._td_client: TDClient = None
         self._stock_frame: StockFrame = None
         self._stock_frame_daily: StockFrame = None
 
@@ -598,28 +596,6 @@ class Portfolio():
         """
 
         self._stock_frame = stock_frame
-
-    @property
-    def td_client(self) -> None:
-        """Gets the TDClient object for the Portfolio
-
-        Returns:
-        ----
-        {TDClient} -- An authenticated session with the TD API.
-        """
-
-        # return self._td_client
-
-    @td_client.setter
-    def td_client(self, td_client: None) -> None:
-        """Sets the TDClient object for the Portfolio
-
-        Arguments:
-        ----
-        td_client {TDClient} -- An authenticated session with the TD API.
-        """
-
-        # self._td_client: TDClient = td_client
 
     def _grab_daily_historical_prices(self) -> StockFrame:
         """Grabs the daily historical prices for each position.
