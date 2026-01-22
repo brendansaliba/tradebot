@@ -23,7 +23,7 @@ milliseconds_since_epoch = milliseconds_since_epoch()
 
 class Robot():
 
-    def __init__(self, app_key: str = None, app_secret: str = None, refresh_token: str = None, redirect_uri: str = "https://127.0.0.1", paper_trading: bool = True, credentials_path: str = None) -> None:
+    def __init__(self, app_key: str = None, app_secret: str = None, refresh_token: str = None, paper_trading: bool = True, credentials_path: str = None) -> None:
         """Initalizes a new instance of the robot and logs into the API platform specified.
 
         Arguments:
@@ -43,7 +43,7 @@ class Robot():
 
         """
 
-        self.client = SchwabClient(app_key=app_key, app_secret=app_secret, refresh_token=refresh_token, redirect_uri=redirect_uri)
+        self.client = SchwabClient(app_key=app_key, app_secret=app_secret, refresh_token=refresh_token)
         self.trading_account = self.client.account_number
         self.credentials_path = credentials_path
         self.trades = {}
@@ -227,7 +227,7 @@ class Robot():
     def grab_current_quotes(self) -> dict:
         """Grabs the current quotes for all positions in the portfolio.
 
-        Makes a call to the TD Ameritrade Get Quotes endpoint with all
+        Makes a call to the Schwab API with all
         the positions in the portfolio. If only one position exist it will
         return a single dicitionary, otherwise a nested dictionary.
 
@@ -467,16 +467,17 @@ class Robot():
 
         return latest_prices
 
-    def wait_till_next_bar(self, last_bar_timestamp: pd.DatetimeIndex) -> None:
+    def wait_till_next_bar(self, last_bar_timestamp: pd.DatetimeIndex, wait_time: int = 60) -> None:
         """Waits the number of seconds till the next bar is released.
 
         Arguments:
         ----
         last_bar_timestamp {pd.DatetimeIndex} -- The last bar's timestamp.
+        time_delta {int} -- The time to wait until the next bar is released. Default to 60 seconds.
         """
 
         last_bar_time = last_bar_timestamp.to_pydatetime()[0].replace(tzinfo=timezone.utc)
-        next_bar_time = last_bar_time + timedelta(seconds=60)
+        next_bar_time = last_bar_time + timedelta(seconds=wait_time)
         curr_bar_time = datetime.now(tz=timezone.utc)
 
         last_bar_timestamp = int(last_bar_time.timestamp())

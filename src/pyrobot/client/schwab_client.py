@@ -9,7 +9,7 @@ import json
 from typing import Union
 
 class SchwabClient():
-    def __init__(self, app_key: str = None, app_secret: str = None, redirect_uri: str = "https://127.0.0.1", refresh_token: str = None) -> None:
+    def __init__(self, app_key: str = None, app_secret: str = None, redirect_uri: str = "https://127.0.0.1", refresh_token: str = None, access_token: str = None, id_token: str = None) -> None:
         self._app_key = app_key
         self._app_secret = app_secret
         self._redirect_uri = redirect_uri
@@ -18,16 +18,19 @@ class SchwabClient():
         self._date = self._get_date()
         self._market_open_day = False 
 
-        # load tokens from storage
+        # tokens
         self._refresh_token = refresh_token
-        self._access_token = None
-        self._id_token = None
+        self._access_token = access_token
+        self._id_token = id_token
 
         if not self._refresh_token:
+            print("No refresh token found. Begin auth flow")
             self.authenticate()
         elif not self._access_token:
+            print("No access token found. Begin token refesh flow")
             self.refresh_tokens()
 
+        self._account_list = self._get_account_list()
         self._account_number, self._account_hash_value = self._get_account_number()
         self.session_hours = self.get_equity_session_hours()
         self._accounts = self._get_accounts()
@@ -76,6 +79,22 @@ class SchwabClient():
 
         return tokens
     
+    def _get_account_list(self):
+        headers = {"Authorization": f"Bearer {self._access_token}"}
+
+        res = requests.get(
+            self._trader_url + f"/accounts/accountNumbers", headers=headers
+        )
+
+        if res.status_code == 200:
+            print("Retrieved account list.")
+            account_list = res.json()
+            return account_list
+        else:
+            print('There was an issue getting accounts')
+            return None
+        
+    
     def _get_account_number(self) -> tuple[str, str]:
         headers = {"Authorization": f"Bearer {self._access_token}"}
 
@@ -83,12 +102,14 @@ class SchwabClient():
             self._trader_url + f"/accounts/accountNumbers", headers=headers
         )
 
-        res_l = res.json()
-        red_d = res_l[0]
-        account_number = red_d["accountNumber"]
-        account_hash_value = red_d["hashValue"]
+        if res.status_code == 200:
+            print("Retrieved account list.")
+            account_list = res.json()
+            red_d = account_list[0]
+            account_number = red_d["accountNumber"]
+            account_hash_value = red_d["hashValue"]
         
-        return [account_number, account_hash_value]
+            return [account_number, account_hash_value]
     
     def _get_date(self) -> str:
         now = datetime.now()
@@ -106,8 +127,8 @@ class SchwabClient():
     def authenticate(self) -> None:
         auth_url = self._construct_auth_url()
         print("Authenticate via Schwab at this url:", auth_url)
-        print("Paste the returned URL here once authentication is complete:")
-        returned_url = input()
+        returned_url = input("Paste the returned URL here once authentication is complete:")
+
         package = self._construct_auth_package(returned_url=returned_url)
         tokens = self._retrieve_tokens(package=package)
 
@@ -139,17 +160,19 @@ class SchwabClient():
 
         if response.status_code == 200:
             print("Retrieved new tokens successfully using refresh token.")
+            tokens = response.json()
+            self._refresh_token = tokens["refresh_token"]
+            self._access_token = tokens["access_token"]
+            self._id_token = tokens["id_token"]
+            print("Tokens refreshed.")
+        elif response.status_code == 401:
+            print("Unauthorized. Restart auth flow to get new refresh token.")
+            self.authenticate()
+            return
         else:
             self.authenticate()
-            pass
+            return
 
-        tokens = response.json()
-        print(tokens)
-
-        self._refresh_token = tokens["refresh_token"]
-        self._access_token = tokens["access_token"]
-        self._id_token = tokens["id_token"]
-        print("Tokens refreshed.")
 
     def get_equity_session_hours(self, date: str = None) -> Union[dict, None]:
         url = f"{self._marketdata_url}/markets/equity"
@@ -233,15 +256,15 @@ class SchwabClient():
             "needPreviousClose": str(previous_close).lower()
         }
 
-        if period is not None:
+        if period:
             params["period"] = period
-        if frequency_type is not None:
+        if frequency_type:
             params["frequencyType"] = frequency_type
-        if period is not None:
+        if period:
             params["frequency"] = frequency
-        if start is not None:
+        if start:
             params["startDate"] = start
-        if end is not None:
+        if end:
             params["endDate"] = end
 
         headers = {

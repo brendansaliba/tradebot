@@ -77,6 +77,11 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+**/.ipynb_checkpoints
+
+# Anaconda
+anaconda_projects
+**/anaconda_projects
 
 # IPython
 profile_default/
@@ -104,6 +109,7 @@ celerybeat.pid
 
 # Environments
 .env
+**/.env
 .venv
 env/
 venv/
@@ -133,8 +139,6 @@ tests/config.py
 .vscode/settings.json
 indicators/
 
-# Sensitive information
-config
 
 # Big stuff
 data
@@ -151,3 +155,4 @@ Desktop.ini
 
 # Local stuff
 logs/
+old

@@ -1,0 +1,4 @@
+{
+  "error": "unsupported_token_type",
+  "error_description": "400 Bad Request: \"{\"error_description\":\"Exception while authenticating refresh token [tokenDigest=FKEDlcmHLUCHSkTeYqBALXyb9XfSxffDw/rwMlIXPFU=, Exception=Failed refresh token authentication [tokenDigest=FKEDlcmHLUCHSkTeYqBALXyb9XfSxffDw/rwMlIXPFU=]]\",\"error\":\"refresh_token_authentication_error\"}\""
+}

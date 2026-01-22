@@ -17,7 +17,13 @@ from configparser import ConfigParser
 from pyrobot.robot import Robot
 from pyrobot.indicators import Indicators
 
+from utils import load_config
+
 load_dotenv()
+config = load_config(config_path='config/config.yaml')
+
+symbol = config['symbol']
+wait_time = config['wait_time']
 
 # Grab configuration values.
 # dirname = os.path.dirname(__file__)
@@ -38,8 +44,6 @@ refresh_token = os.getenv("REFRESH_TOKEN")
 bot = Robot(
     app_key=app_key,
     app_secret=app_secret,
-    refresh_token=refresh_token,
-    credentials_path=None,
 )
 
 
