@@ -352,8 +352,11 @@ class Robot():
         self._bar_size = bar_size
         self._bar_type = bar_type
 
-        start = str(milliseconds_since_epoch(dt_object=start))
-        end = str(milliseconds_since_epoch(dt_object=end))
+        # start = str(milliseconds_since_epoch(dt_object=start))
+        # end = str(milliseconds_since_epoch(dt_object=end))
+
+        start = self.client.unix_from_datetime(start)
+        end = self.client.unix_from_datetime(end)
 
         new_prices = []
 
@@ -362,21 +365,20 @@ class Robot():
 
         for symbol in symbols:
 
-            historical_prices_response = self.session.get_price_history(
-                symbol=symbol,
-                period_type='day',
-                start_date=start,
-                end_date=end,
+            historical_price_response = self.client.get_price_history(
+                symbol=symbol, 
+                start=start,
+                end=end,
+                period_type="day", 
                 frequency_type=bar_type,
                 frequency=bar_size,
-                extended_hours=True
+                extended_hours=False
             )
 
             self.historical_prices[symbol] = {}
-            self.historical_prices[symbol]['candles'] = historical_prices_response['candles']
+            self.historical_prices[symbol]['candles'] = historical_price_response['candles']
 
-            for candle in historical_prices_response['candles']:
-
+            for candle in historical_price_response['candles']:
                 new_price_mini_dict = {}
                 new_price_mini_dict['symbol'] = symbol
                 new_price_mini_dict['open'] = candle['open']
@@ -416,8 +418,8 @@ class Robot():
         # Define the start and end date.
         end_date = datetime.today()
         start_date = end_date - timedelta(days=1)
-        start = str(milliseconds_since_epoch(dt_object=start_date))
-        end = str(milliseconds_since_epoch(dt_object=end_date))
+        start = self.client.unix_from_datetime(start_date)
+        end = self.client.unix_from_datetime(end_date)
 
         latest_prices = []
 
@@ -427,7 +429,7 @@ class Robot():
             try:
 
                 # Grab the request.
-                historical_prices_response = self.session.get_price_history(
+                historical_prices_response = self.client.get_price_history(
                     symbol=symbol,
                     period_type='day',
                     start_date=start,
@@ -442,7 +444,7 @@ class Robot():
                 time_true.sleep(2)
 
                 # Grab the request.
-                historical_prices_response = self.session.get_price_history(
+                historical_prices_response = self.client.get_price_history(
                     symbol=symbol,
                     period_type='day',
                     start_date=start,
@@ -949,7 +951,6 @@ class Robot():
 
                 else:
                     print('Not currently holding any positions.')
-
 
     def get_positions(self, account_number: str = None, all_accounts: bool = False) -> List[Dict]:
         """Gets all the positions for a specified account number.

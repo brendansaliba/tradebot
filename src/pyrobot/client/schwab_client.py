@@ -30,10 +30,12 @@ class SchwabClient():
             print("No access token found. Begin token refesh flow")
             self.refresh_tokens()
 
-        self._account_list = self._get_account_list()
+        # self._account_list = self._get_account_list()
         self._account_number, self._account_hash_value = self._get_account_number()
         self.session_hours = self.get_equity_session_hours()
         self._accounts = self._get_accounts()
+
+        print("Current refresh token:", self._refresh_token)
 
 
     def _construct_auth_url(self) -> str:
@@ -119,6 +121,10 @@ class SchwabClient():
     def get_datetime(self) -> str:
         now = datetime.now(timezone.utc)
         return now.strftime("%Y-%m-%dT%H:%M:%S%z")
+    
+    def unix_from_datetime(self, date: datetime) -> float:
+        unix = date.timestamp() * 1000
+        return round(unix)
 
     @property
     def account_number(self):
@@ -247,7 +253,7 @@ class SchwabClient():
 
         self._accounts = accounts
 
-    def get_historical_prices(self, symbol: str = None, period_type: str = "", period: int = None, frequency_type: str = "", frequency: int = None, start: str = None, end: str = None, extended_hours: bool = True, previous_close: bool = True):
+    def get_price_history(self, symbol: str = None, period_type: str = "", period: int = None, frequency_type: str = "", frequency: int = None, start: str = None, end: str = None, extended_hours: bool = True, previous_close: bool = True):
         url = f"{self._marketdata_url}/pricehistory"
         params = {
             "symbol": symbol.upper(),
@@ -283,7 +289,6 @@ class SchwabClient():
                 raise RuntimeError("429 Rate limit hit")
                 
             r.raise_for_status()
-            print(json.dumps(r.json()))
             return r.json()
         
         except requests.exceptions.HTTPError as e:

@@ -10,6 +10,7 @@ import operator
 import os
 from dotenv import load_dotenv
 
+import pytz
 from datetime import datetime
 from datetime import timedelta
 from configparser import ConfigParser
@@ -19,11 +20,15 @@ from pyrobot.indicators import Indicators
 
 from utils import load_config
 
+tz = pytz.timezone('America/New_York')
+
 load_dotenv()
 config = load_config(config_path='config/config.yaml')
 
 symbol = config['symbol']
 wait_time = config['wait_time']
+
+
 
 # Grab configuration values.
 # dirname = os.path.dirname(__file__)
@@ -44,16 +49,14 @@ refresh_token = os.getenv("REFRESH_TOKEN")
 bot = Robot(
     app_key=app_key,
     app_secret=app_secret,
+    refresh_token=refresh_token
 )
 
-
-# bot.client.get_historical_prices(
-#     symbol="TSLA",
-#     period_type="month",
-#     period=1,
-#     frequency_type="daily",
-#     frequency=1,
-# )
+historical = bot.grab_historical_prices(
+    start=tz.localize(datetime(2026, 1, 5, 9, 30, 0)),
+    end=tz.localize(datetime(2026, 1, 5, 9, 32, 0)),
+    symbols=["TSLA"]
+)
 
 
 # Convert data to a Data Frame.
